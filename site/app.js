@@ -29,8 +29,14 @@ let me = null;
 const st = {
   status: "matched", q: "", province: "", klass: "", maxGrade: "", sort: "closing",
   flags: new Set(), offset: 0, rows: [], total: 0, dash: null, cats: [], lib: [], current: null, rates: [], settings: {},
-  people: [], cost: null, reqs: null
+  people: [], cost: null, reqs: null, work: new Set(), workCounts: {}
 };
+const WORK = [["water", "Water supply"], ["sanitation", "Sewer and sanitation"], ["pumps", "Pumps and pump stations"], ["pipelines", "Pipelines"],
+  ["roads", "Roads and paving"], ["stormwater", "Stormwater and drainage"], ["structures", "Bridges and structures"], ["geotech", "Geotechnical and earthworks"],
+  ["dams", "Dams and rivers"], ["services", "Township services"], ["buildings", "Buildings and facilities"], ["mechanical", "Mechanical plant and HVAC"],
+  ["power", "Power and electrical"], ["transport", "Rail, ports and airports"], ["other", "Other"]];
+const WORK_LABEL = Object.fromEntries(WORK);
+try { (JSON.parse(localStorage.getItem("pg-work") || "[]") || []).forEach(w => { if (WORK_LABEL[w]) st.work.add(w); }); } catch (_) {}
 
 /* ---------- helpers ---------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -171,6 +177,7 @@ function filtersPayload() {
   if (st.province) f.province = st.province;
   if (st.klass) f.class = st.klass;
   if (st.maxGrade) f.max_grade = Number(st.maxGrade);
+  if (st.work.size) f.work = [...st.work];
   if (st.flags.has("panel")) f.panel = true;
   if (st.flags.has("rfq")) f.rfq = true;
   if (st.flags.has("purchase")) f.purchase = true;
@@ -196,8 +203,11 @@ function gradeChips(t) {
   if (t.cidb_requirement) return t.cidb_requirement.split(", ").map(g => `<span class="chip grade">${esc(g)}</span>`).join("");
   return `<span class="chip nograde">Grade not stated</span>`;
 }
+function workChips(t) {
+  return (t.work_types || []).filter(w => w !== "other").slice(0, 3).map(w => `<span class="chip work">${esc(WORK_LABEL[w] || w)}</span>`).join("");
+}
 function rowChips(t) {
-  const c = [gradeChips(t)];
+  const c = [gradeChips(t), workChips(t)];
   if (t.is_panel) c.push('<span class="chip info">Panel / rate-based</span>');
   if (t.is_rfq) c.push('<span class="chip info">Quotation</span>');
   if (t.briefing_compulsory && t.briefing_at) {
@@ -218,9 +228,9 @@ function stamp(t) {
 }
 function renderList() {
   const L = $("#list");
-  $("#resultline").textContent = st.total ? `${st.total.toLocaleString("en-ZA")} ${st.status === "excluded" ? "excluded adverts" : st.status === "to_screen" ? "adverts waiting for a document check" : st.status === "active" ? "bids in progress" : "matching open bids"}` : "";
+  $("#resultline").textContent = st.total ? `${st.total.toLocaleString("en-ZA")} ${st.status === "excluded" ? "excluded adverts" : st.status === "to_screen" ? "adverts waiting for a document check" : st.status === "active" ? "bids in progress" : "matching open bids"}${st.work.size ? " · " + [...st.work].map(w => WORK_LABEL[w]).join(", ") : ""}` : "";
   if (!st.rows.length) {
-    L.innerHTML = `<div class="empty">${st.status === "active" ? "No bids in progress yet. Open a matching bid and set its status to Interested to start one." : "Nothing matches these filters. Clear a filter or search for something else."}</div>`;
+    L.innerHTML = `<div class="empty">${st.status === "active" && !st.work.size ? "No bids in progress yet. Open a matching bid and press Prepare this bid to start one." : "Nothing matches these filters. Clear a filter or a type of work, or search for something else."}</div>`;
     $("#moreBtn").hidden = true; return;
   }
   L.innerHTML = st.rows.map(t => `
@@ -244,6 +254,7 @@ $$("#segStatus button").forEach(b => b.addEventListener("click", () => {
   st.status = b.dataset.status;
   $$("#segStatus button").forEach(x => x.setAttribute("aria-pressed", x === b));
   safe(() => loadTenders());
+  loadWorkCounts();
 }));
 $$("[data-flag]").forEach(b => b.addEventListener("click", () => {
   const f = b.dataset.flag; st.flags.has(f) ? st.flags.delete(f) : st.flags.add(f);
@@ -269,6 +280,24 @@ $$("#summary .stat").forEach(b => b.addEventListener("click", () => {
   $$("#segStatus button").forEach(x => x.setAttribute("aria-pressed", x.dataset.status === st.status));
   safe(() => loadTenders());
 }));
+
+/* ---------- type of work ---------- */
+function renderWorkChips() {
+  const box = $("#workTypes"); if (!box) return;
+  const counts = st.workCounts || {};
+  box.innerHTML = `<span class="wlabel">Type of work</span>${WORK.map(([k, label]) => `<button class="toggle" type="button" data-work="${k}" aria-pressed="${st.work.has(k)}">${esc(label)}${counts[k] != null ? `<span class="n">${counts[k]}</span>` : ""}</button>`).join("")}
+    <button class="linkbtn" type="button" id="workClear" ${st.work.size ? "" : "hidden"}>Show all types</button>`;
+  $$("[data-work]", box).forEach(b => b.onclick = () => {
+    const k = b.dataset.work; st.work.has(k) ? st.work.delete(k) : st.work.add(k);
+    saveWork(); renderWorkChips(); safe(() => loadTenders());
+  });
+  $("#workClear").onclick = () => { st.work.clear(); saveWork(); renderWorkChips(); safe(() => loadTenders()); };
+}
+function saveWork() { try { localStorage.setItem("pg-work", JSON.stringify([...st.work])); } catch (_) {} }
+async function loadWorkCounts() {
+  try { st.workCounts = st.status === "active" ? {} : (await api("work_counts", { status: st.status })) || {}; } catch (_) { st.workCounts = {}; }
+  renderWorkChips();
+}
 
 /* ---------- Tender Desk preparing a bid ---------- */
 const TENDER_KINDS = ["tender_doc", "purchased_scan", "addendum"];
@@ -1439,9 +1468,11 @@ async function startApp() {
   $("#teamTab").hidden = me.role !== "admin";
   if (me.must_change_password) askPassword(true);
   try { const g = localStorage.getItem("pg-maxgrade"); if (g) { st.maxGrade = g; $("#maxGrade").value = g; } } catch (_) {}
+  renderWorkChips();
   await safe(async () => {
     await loadDashboard();
     await loadTenders();
+    loadWorkCounts();
     let tab = null; try { tab = localStorage.getItem("pg-tab"); } catch (_) {}
     const hash = (location.hash || "").replace("#", "");
     if (["bids", "uploads", "library", "people", "profile", "rates", "scanner", "team"].includes(hash)) tab = hash;
