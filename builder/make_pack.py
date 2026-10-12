@@ -129,10 +129,14 @@ def doc_text(path: Path) -> str:
     return ""
 
 
-def pick_team(specs: list[dict], people: list[dict]) -> list[dict]:
-    """Assign one person per role: the named person if given, else the best match not already proposed."""
+def pick_team(specs: list[dict], people: list[dict], auto: bool = True) -> list[dict]:
+    """Assign one person per role: the named person if given, else (when auto) the best match not already proposed.
+    A plan's own personnel list is the Tender Desk's decision: a position without a person stays open."""
     used, team = set(), []
     for s in specs:
+        if not s.get("person") and not auto:
+            team.append({**s, "person": None})
+            continue
         cands = people if s.get("person") else [p for p in people if p.get("id") not in used]
         p = functionality._pick_person(s, cands) if cands else None
         if p and not s.get("person"):
@@ -328,7 +332,7 @@ def main():
     # ------------------------------------------------ 3. functionality and key personnel
     specs = plan.get("personnel") or [{"role": c.get("role"), "requirement": c.get("requirement", ""), "person": c.get("person")}
                                       for c in plan.get("functionality") or [] if c.get("kind") == "personnel"]
-    team = pick_team(specs, people)
+    team = pick_team(specs, people, auto=not plan.get("personnel"))
     # score each personnel criterion against the person actually proposed for that role
     by_role = {(m.get("role") or "").lower(): m["person"] for m in team}
     fplan = {**plan, "functionality": [({**c, "person": by_role[(c.get("role") or "").lower()]["full_name"]}
@@ -465,6 +469,12 @@ def main():
                 for m in team:
                     if not m["person"]:
                         notes.append(f"{m.get('role')}: no one assigned")
+                        if demo:
+                            sec["files"].append(ph(f"{m.get('role') or 'Key person'}: to be appointed",
+                                                   "Nobody on Pump Group's record meets this position's requirement yet.",
+                                                   [f"The tender asks for: {m.get('requirement') or 'see the tender document'}",
+                                                    "Add the person under People (career history, qualifications, registration) and upload their certified "
+                                                    "qualifications. On the next build Tender Desk writes their CV for this position and their appointment letter."]))
                         continue
                     if gen_kind in ("personnel", "personnel_cvs") and m["cv"] and m["cv"].get("pdf"):
                         sec["files"].append(lh(m["cv"]["pdf"]))
