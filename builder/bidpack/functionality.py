@@ -61,6 +61,10 @@ def company_projects(library: list[dict], c: dict, flagged: bool = False) -> lis
             continue
         if bool(FLAG_RE.search(d.get("notes") or "")) != flagged and not c.get("include_flagged"):
             continue
+        # the tender wants experience as main contractor: subcontract work does not count
+        if (c.get("main_contractor_only") or re.search(r"main contractor|principal contractor", c.get("requirement") or "", re.I)) \
+                and re.search(r"sub-?contract", f"{d.get('title', '')} {d.get('notes', '')}", re.I):
+            continue
         key = re.sub(r"\W+", "", (d.get("title") or "").lower())[:40]
         if key in seen:
             continue
@@ -84,6 +88,56 @@ def _score_from_rules(c: dict, n_projects: int | None = None, level: str | None 
             return part[0] if part else (round(mx / 2, 1) if mx else None)
         return 0.0
     return None
+
+
+_RAND = re.compile(r"R\s*([0-9][0-9\s,]*(?:\.[0-9]+)?)\s*(m|million|k)?", re.I)
+
+
+def _amount(txt: str, unit: str | None) -> float:
+    v = float(re.sub(r"[\s,]", "", txt))
+    u = (unit or "").lower()
+    return v * 1_000_000 if u in ("m", "million") else v * 1000 if u == "k" else v
+
+
+def _value_bands(c: dict) -> list[dict]:
+    """Scoring by contract value ("R8 000 001 and above: 100 points per project (max 1 project)").
+    Rules may give min_value / max_value / max_projects directly, or say it in words."""
+    bands = []
+    for r in c.get("scoring") or []:
+        pts = float(r.get("points") or 0)
+        lo, hi = r.get("min_value"), r.get("max_value")
+        text = str(r.get("rule") or "")
+        if lo is None and hi is None and text:
+            amts = [_amount(a, u) for a, u in _RAND.findall(text)]
+            if len(amts) >= 2:
+                lo, hi = min(amts[:2]), max(amts[:2])
+            elif len(amts) == 1:
+                if re.search(r"(below|less than|under|up to|not exceeding)", text, re.I):
+                    lo, hi = 0, amts[0]
+                else:
+                    lo, hi = amts[0], None
+        if lo is None and hi is None:
+            continue
+        m = re.search(r"max(?:imum)?\.?\s*(?:of\s*)?(\d+)\s*project", text, re.I)
+        bands.append({"points": pts, "min": float(lo or 0), "max": float(hi) if hi is not None else None,
+                      "max_projects": int(r.get("max_projects") or (m.group(1) if m else 0) or 0) or None,
+                      "per_project": bool(r.get("per_project", re.search(r"per project", text, re.I)))})
+    return bands
+
+
+def _score_bands(bands: list[dict], projs: list[dict], cap: float) -> tuple[float, list[str]]:
+    used_in, total, used = {}, 0.0, []
+    for d in sorted(projs, key=lambda x: float(x.get("project_value") or 0), reverse=True):
+        v = float(d.get("project_value") or 0)
+        for i, b in enumerate(bands):
+            if v >= b["min"] and (b["max"] is None or v <= b["max"]):
+                if b["max_projects"] and used_in.get(i, 0) >= b["max_projects"]:
+                    break
+                used_in[i] = used_in.get(i, 0) + 1
+                total += b["points"] if b["per_project"] or used_in[i] == 1 else 0
+                used.append(d.get("title"))
+                break
+    return (min(total, cap) if cap else total), used
 
 
 def evaluate(plan: dict, data: dict) -> list[dict]:
@@ -111,8 +165,16 @@ def evaluate(plan: dict, data: dict) -> list[dict]:
             projs = company_projects(library, c)
             r["projects"] = [{"title": d.get("title"), "client": d.get("client"), "value": d.get("project_value"), "id": d.get("id")} for d in projs]
             r["evidence"] += [d.get("title") for d in projs]
-            r["est_points"] = _score_from_rules(c, n_projects=len(projs))
-            need = max([int(x.get("min_projects", 0)) for x in (c.get("scoring") or [])] or [0])
+            bands = _value_bands(c)
+            if bands:
+                mx = float(c.get("max_points") or 0)
+                r["est_points"], r["scored_projects"] = _score_bands(bands, projs, mx)
+                if mx and r["est_points"] < mx:
+                    r["gaps"].append(f"Projects on file earn an estimated {r['est_points']:g} of {mx:g}: upload appointment letters and "
+                                     "completion certificates for larger projects to score more.")
+            else:
+                r["est_points"] = _score_from_rules(c, n_projects=len(projs))
+            need = 0 if bands else max([int(x.get("min_projects", 0)) for x in (c.get("scoring") or [])] or [0])
             if need and len(projs) < need:
                 r["gaps"].append(f"{len(projs)} qualifying project(s) on file; top score needs {need}. Upload more completion certificates.")
             held = [] if c.get("include_flagged") else company_projects(library, c, flagged=True)
