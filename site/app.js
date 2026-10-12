@@ -888,7 +888,10 @@ async function renderUploads(id) {
     const guide = r.kind === "personnel" ? CAT_GUIDE.qualification : cats.map(c => CAT_GUIDE[c] || (st.cats.find(x => x.key === c) || {}).hint).filter(Boolean)[0] || "";
     const days = maxAge(cats);
     const limit = days ? (t.closes_at ? `Dated or certified on or after ${fmtDate(new Date(new Date(t.closes_at).getTime() - days * 864e5))}, so it is not older than ${days} days at closing.` : `Not older than ${days} days.`) : "";
-    const onFile = libDocsFor(r).map(d => { const s_ = docState(d, st.cats.find(c => c.key === d.category)); return `${esc(d.title)} <span class="chip ${s_.cls}">${esc(s_.text)}</span>`; });
+    const onFile = libDocsFor(r).map(d => {
+      if (!d.storage_path) return `${esc(d.title)} <span class="chip warn">Listed, but the file is not uploaded yet</span> <button class="btn small no-print" type="button" data-attachdoc="${esc(d.id)}">Add the file</button>`;
+      const s_ = docState(d, st.cats.find(c => c.key === d.category)); return `${esc(d.title)} <span class="chip ${s_.cls}">${esc(s_.text)}</span>`;
+    });
     const regs = person && person.registrations && person.registrations.length ? person.registrations.map(x => { const [c_, txt] = regState(x); return `${esc(x.body || "")} ${esc(x.category || "")} <span class="chip ${c_}">${esc(txt)}</span>`; }) : [];
     const notes = [...(flags[r.id] || []), r.note].filter(Boolean);
     const where = whereIn(r);
@@ -954,7 +957,7 @@ async function renderUploads(id) {
     </div>
     ${!prep && !pack ? `<div class="notice info">Tender Desk has not prepared this bid yet, so this list comes from the advert and the usual returnables. Open the bid and press <b>Prepare this bid</b> for the tender's own list.</div>` : ""}
     ${!total && !manual.length && rows.length ? `<div class="notice info" style="background:var(--ok-bg);color:var(--ok)">Nothing to upload for this bid. ${pack ? "Check the list at the end, then print." : ""}</div>` : ""}
-    ${block("Upload these", "Not in the document library. Each upload is saved to the library, so the next bid has it too.", missing, "")}
+    ${block("Upload these", "Not in the document library, or listed there without its file. Each upload is saved to the library, so the next bid has it too.", missing, "")}
     ${block("Replace these: out of date", "The library has a copy, but it has expired or is older than the tender allows.", expired, "expired")}
     ${block("Attach by hand for this bid", "Only you can provide these. Print them and put them behind their divider in the returnables pack.", manual, "manual")}
     ${loose.length ? `<section class="upsec"><h3>Also flagged when the bid pack was built <span class="count">${loose.length}</span></h3>
@@ -986,6 +989,18 @@ async function renderUploads(id) {
     if (b.dataset.upset === "missing") await api("refresh_requirements", { id: t.id });
     await loadUploads(); loadDashboard();
   }));
+  $$("[data-attachdoc]", B).forEach(b => b.onclick = () => {
+    const doc = (st.lib || []).find(d => d.id === b.dataset.attachdoc); if (!doc) return;
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "application/pdf,image/png,image/jpeg,image/webp";
+    inp.onchange = () => safe(async () => {
+      const file = inp.files[0]; if (!file) return;
+      b.disabled = true; b.textContent = "Uploading…";
+      await attachFile(doc, file);
+      await api("refresh_requirements", { id: t.id });
+      st.libLoaded = false; toast("File added"); await loadUploads(); loadDashboard();
+    });
+    inp.click();
+  });
   $$("[data-tick]", B).forEach(c => c.onchange = () => { const s_ = readTicks(id); c.checked ? s_.add(c.dataset.tick) : s_.delete(c.dataset.tick); writeTicks(id, s_); });
   wireOpen(B);
 }
