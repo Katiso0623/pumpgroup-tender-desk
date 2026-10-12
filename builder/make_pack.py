@@ -63,7 +63,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from bidpack import boq as B  # noqa: E402
-from bidpack import costmodel, cv, functionality, letters, pack, writeups  # noqa: E402
+from bidpack import costmodel, cv, demo as demo_pages, functionality, letters, pack, writeups  # noqa: E402
 from bidpack.common import fmt_dt, load_data, parse_date  # noqa: E402
 from bidpack.fill_docx import fill_docx  # noqa: E402
 from bidpack.fill_pdf import fill_pdf  # noqa: E402
@@ -187,6 +187,40 @@ def main():
 
     def lh(path):  # generated PDF printed on the letterhead
         return {"path": path, "letterhead": True}
+
+    # demonstration packs: a marked placeholder page wherever a document is not on the Tender Desk yet
+    demo = bool(plan.get("demo")) or str(T.get("source") or "") == "demo"
+    ph_count = [0]
+
+    def ph(heading, kind_line, lines):
+        ph_count[0] += 1
+        return demo_pages.placeholder(str(work / "placeholders" / f"{ph_count[0]:03d}.pdf"), heading, kind_line, lines)
+
+    def cat_label(key):
+        return (cat_info.get(key) or {}).get("label") or key
+
+    def ph_doc(d):  # a library record whose file has not been uploaded
+        facts = []
+        if d.get("client"):
+            facts.append(f"Client: {d['client']}")
+        if d.get("project_value"):
+            facts.append(f"Contract value: R {float(d['project_value']):,.2f}".replace(",", " "))
+        if d.get("issued_on"):
+            facts.append(f"Issued or certified: {d['issued_on']}")
+        if d.get("expires_on"):
+            facts.append(f"Expires: {d['expires_on']}")
+        return ph(d.get("title") or cat_label(d.get("category")),
+                  f"On file in the document library ({cat_label(d.get('category'))}), but the file has not been uploaded to the Tender Desk yet.",
+                  ["  ·  ".join(facts)] if facts else [])
+
+    def ph_missing(title, cats):
+        hints = [(cat_info.get(c) or {}).get("hint") for c in cats]
+        days = [int((cat_info.get(c) or {}).get("max_age_days") or 0) for c in cats]
+        days = [d_ for d_ in days if d_]
+        lines = [f"What it must be: {h}" for h in hints if h]
+        if days:
+            lines.append(f"Date limit: not older than {min(days)} days at closing (check the tender's own limit).")
+        return ph(title, "Not in the document library yet: " + " or ".join(cat_label(c) for c in cats) + ".", lines)
 
     summary = {"tender_id": T.get("id"), "tender_no": T.get("tender_no"), "built": today.isoformat(), "outputs": [],
                "fill": {}, "boq": {}, "problems": [], "generated": [], "requirements": []}
@@ -420,6 +454,8 @@ def main():
             sec["note"] = w.get("note") or "Insert by hand."
             sec["missing"], status = True, "manual"
             attention.append(f"{title}: {sec['note']}")
+            if demo:
+                sec["files"].append(ph(title, "Attach by hand for this bid.", [sec["note"]]))
         elif gen_kind:
             if gen_kind.startswith("personnel"):
                 if gen_kind == "personnel":
@@ -442,6 +478,12 @@ def main():
                                 doc_ids.append(d.get("id"))
                             else:
                                 notes.append(f"{d.get('title')}: file not fetched")
+                                if demo:
+                                    sec["files"].append(ph_doc(d))
+                        if demo and not any(d.get("category") == "qualification" for d in m["docs"]):
+                            sec["files"].append(ph(f"Certified qualifications: {m['person']['full_name']}",
+                                                   "Not in the document library yet: Qualifications and registrations.",
+                                                   [f"Position: {m.get('role') or ''}", "What it must be: certified copies of the degree or diploma and the professional registration certificate (for example ECSA or SACPCMP), with proof the registration is current."]))
                     if gen_kind in ("personnel", "personnel_appointments") and m["appointment"] and m["appointment"].get("pdf"):
                         sec["files"].append(lh(m["appointment"]["pdf"]))
                 for c in plan.get("functionality") or []:
@@ -459,6 +501,8 @@ def main():
                             doc_ids.append(d.get("id"))
                         else:
                             notes.append(f"{d.get('title')}: file not fetched")
+                            if demo:
+                                sec["files"].append(ph_doc(d))
                     if not res["projects"]:
                         notes.append("No completed projects in the library match")
                 for c in plan.get("functionality") or []:
@@ -487,6 +531,10 @@ def main():
                     doc_ids.append(d.get("id"))
                 else:
                     probs.append(f"{d.get('title')}: file not fetched from the library")
+                    if demo:
+                        sec["files"].append(ph_doc(d))
+            if demo and not docs:
+                sec["files"].append(ph_missing(title, cats))
                 if re.search(r"names the|tender-specific", d.get("notes") or "", re.I):
                     attention.append(f"{title}: {d.get('title')}: {d['notes']}")
                 elif re.search(r"\bcheck\b", d.get("notes") or "", re.I):
@@ -609,6 +657,10 @@ def main():
         deliver.append(f"Submit the original and the copies the tender asks for ('{m_copies.group(0).strip()}'). Mark them ORIGINAL and COPY.")
     deliver += ["Update the index page numbers by hand if you add or remove pages (the Word index is editable).",
                 "Seal the envelope(s) and attach the envelope labels."]
+    if demo and ph_count[0]:
+        attention.insert(0, f"DEMONSTRATION PACK: {ph_count[0]} placeholder page(s) stand in for documents that are not on the Tender Desk yet. "
+                            "Upload them and build the pack again before using it for a real bid.")
+    summary["demo"], summary["placeholders"] = demo, ph_count[0]
     seen = set()
     attention = [x for x in attention if not (x in seen or seen.add(x))]
     review = [x for x in review if not (x in seen or seen.add(x))]

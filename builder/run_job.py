@@ -166,7 +166,7 @@ def run_build(job: dict, data: dict, tender_files: list, library_files: list):
             idx, key = u["slot"]
             generated[idx][key] = target["path"]
         keep = ("tender_no", "built", "fill", "boq", "escalation", "cost_model", "cost_model_recalc", "index", "requirements", "db_requirements",
-                "functionality", "team", "attention", "review", "problems", "checklist", "section_notes")
+                "functionality", "team", "attention", "review", "problems", "checklist", "section_notes", "demo", "placeholders")
         slim = {k: summary.get(k) for k in keep}
         slim["generated"] = generated
         call("complete", job_id=job["id"], summary=slim, outputs=outputs)
