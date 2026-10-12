@@ -1,0 +1,31 @@
+name: Bid pack builder
+# Picks up work queued on the Tender Desk: reading scanned tender documents and building bid packs.
+# Authenticates to the Tender Desk with this workflow's GitHub OIDC token; no secrets are stored here.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: builder
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for waiting work
+        id: peek
+        run: python3 builder/run_job.py --peek >> "$GITHUB_OUTPUT"
+      - name: Install document tools
+        if: steps.peek.outputs.queued != '0'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libreoffice-writer libreoffice-calc poppler-utils tesseract-ocr fonts-crosextra-carlito fonts-liberation > /dev/null
+          pip install -q python-docx==1.1.2 pypdf==4.3.1 pdfplumber==0.11.4 reportlab==4.2.5 openpyxl==3.1.5 pillow==10.4.0
+      - name: Run waiting jobs
+        if: steps.peek.outputs.queued != '0'
+        run: python3 builder/run_job.py

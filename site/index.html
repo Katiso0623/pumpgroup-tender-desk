@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pump Group Tender Desk</title>
+<meta name="description" content="Pump Group SA tender desk: matching public tenders, bid requirements, documents, people and costs.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#3d4045">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+
+/* Layout: Pump Group SA's tender desk, dressed like the company letterhead: a charcoal band with
+   the logo and a blue rule, a tab strip, and work surfaces below. A bid opens in a sheet from the
+   right. Pump Group blue marks CIDB gradings and the active tab. */
+:root {
+  --paper: #f2f4f6;
+  --sheet: #ffffff;
+  --ink: #22262a;
+  --ink-2: #4b535b;
+  --ink-3: #6c7580;
+  --line: #d6dce2;
+  --wash: #e8edf1;
+  --charcoal: #3d4045;
+  --charcoal-ink: #ffffff;
+  --hazard: #1aa3dd;
+  --hazard-ink: #ffffff;
+  --btn: #3d4045;
+  --btn-ink: #ffffff;
+  --link: #0f6f9c;
+  --ok: #24724a;
+  --ok-bg: #e0f1e6;
+  --warn: #965a00;
+  --warn-bg: #fbedd5;
+  --bad: #b02a20;
+  --bad-bg: #f9e1de;
+  --info: #0f6f9c;
+  --info-bg: #dff1fa;
+  --shadow: 0 10px 40px rgba(20, 26, 32, .18);
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121518; --sheet: #1a1e22; --ink: #e6eaee; --ink-2: #a7b0b9; --ink-3: #86909a;
+    --line: #2c3238; --wash: #22282d; --charcoal: #0b0d0f; --charcoal-ink: #ffffff; --hazard: #2fb3ea; --hazard-ink: #071820;
+    --btn: #e6eaee; --btn-ink: #121518; --link: #6fc6ef;
+    --ok: #6cc893; --ok-bg: #173323; --warn: #e8a945; --warn-bg: #352610;
+    --bad: #f07a6f; --bad-bg: #3a1a17; --info: #6fc6ef; --info-bg: #11293a;
+    --shadow: 0 10px 40px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121518; --sheet: #1a1e22; --ink: #e6eaee; --ink-2: #a7b0b9; --ink-3: #86909a;
+  --line: #2c3238; --wash: #22282d; --charcoal: #0b0d0f; --charcoal-ink: #ffffff; --hazard: #2fb3ea; --hazard-ink: #071820;
+  --btn: #e6eaee; --btn-ink: #121518; --link: #6fc6ef;
+  --ok: #6cc893; --ok-bg: #173323; --warn: #e8a945; --warn-bg: #352610;
+  --bad: #f07a6f; --bad-bg: #3a1a17; --info: #6fc6ef; --info-bg: #11293a;
+  --shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+a { color: var(--link); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--hazard); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; }
+@media (max-width: 520px) { .wrap { padding-inline: 16px; } }
+
+/* App bar */
+.bar { background: var(--charcoal); color: var(--charcoal-ink); padding-block: 12px; position: relative; }
+.bar::after { content: ""; position: absolute; right: 0; bottom: 0; width: 42%; height: 5px; background: var(--hazard); }
+.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.logo { background: #ffffff; border-radius: 6px; padding: 3px 8px; display: flex; align-items: center; }
+.logo img { height: 44px; width: auto; display: block; }
+.brand h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 26px; letter-spacing: .04em; text-transform: uppercase; line-height: 1; }
+.brand h1 span { color: var(--hazard); }
+.brand small { display: block; font-size: 12.5px; opacity: .8; margin-top: 3px; letter-spacing: .02em; }
+.scanline { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.scanline .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); flex: none; }
+.scanline .dot.bad { background: var(--bad); }
+.bar button { background: transparent; color: inherit; border: 1px solid rgba(255, 255, 255, .4); border-radius: var(--r); padding: 5px 12px; cursor: pointer; }
+
+/* Requirements, people, costs */
+.req { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.req:last-child { border-bottom: 0; }
+.req .t { font-weight: 600; overflow-wrap: anywhere; }
+.req .meta { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+.req .acts { display: flex; gap: 6px; align-items: start; flex-wrap: wrap; justify-content: end; }
+.req form { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 10px; background: var(--wash); border-radius: var(--r); padding: 10px; margin-top: 6px; }
+@media (max-width: 560px) { .req { grid-template-columns: minmax(0, 1fr); } .req .acts { justify-content: start; } }
+.reqhead { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.tally { display: flex; flex-wrap: wrap; gap: 6px; }
+.missingpanel { border: 1px solid var(--bad); background: var(--bad-bg); border-radius: var(--r); padding: 12px 14px; margin-bottom: 16px; }
+.missingpanel h3 { margin: 0 0 6px; font-family: var(--display); font-size: 18px; letter-spacing: .04em; text-transform: uppercase; color: var(--bad); }
+.missingpanel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.missingpanel li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; color: var(--ink); }
+.people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 860px) { .people { grid-template-columns: minmax(0, 1fr); } }
+.person { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.person header { display: flex; justify-content: space-between; gap: 10px; align-items: start; flex-wrap: wrap; }
+.person h3 { margin: 0; font-size: 17px; }
+.person .pos { font-size: 13.5px; color: var(--ink-2); }
+.person .yrs { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1; text-align: right; }
+.person .yrs small { display: block; font-family: var(--body); font-weight: 500; font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+.person h4 { margin: 4px 0 2px; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+.person ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 13.5px; }
+.person details summary { cursor: pointer; font-size: 13.5px; color: var(--link); }
+.subnav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+.spark { width: 110px; height: 26px; display: block; }
+.spark path.l { fill: none; stroke: var(--hazard); stroke-width: 1.6; }
+.spark path.a { fill: color-mix(in srgb, var(--hazard) 18%, transparent); stroke: none; }
+.spark circle { fill: var(--hazard); }
+.delta { font-family: var(--mono); font-size: 12px; }
+.delta.up { color: var(--warn); }
+.delta.down { color: var(--ok); }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #ffffff; }
+.hint-line { font-size: 13px; color: var(--ink-3); margin: -8px 0 14px; max-width: 80ch; }
+
+/* Tabs */
+.tabs { background: var(--sheet); border-bottom: 1px solid var(--line); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
+.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; }
+.tabs button { background: none; border: 0; padding: 13px 14px 11px; font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--hazard); }
+.tabs .count { font-family: var(--mono); font-size: 12px; margin-left: 6px; color: var(--ink-3); }
+
+main { padding-block: 22px 60px; }
+.notice { border-radius: var(--r); padding: 12px 14px; margin-bottom: 16px; font-size: 14px; }
+.notice.bad { background: var(--bad-bg); color: var(--bad); }
+.notice.warn { background: var(--warn-bg); color: var(--warn); }
+.notice.info { background: var(--info-bg); color: var(--info); }
+
+h2.section { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: .02em; text-transform: uppercase; margin: 0 0 4px; }
+p.lede { margin: 0 0 18px; color: var(--ink-2); max-width: 70ch; }
+
+/* Summary strip */
+.summary { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+@media (max-width: 1100px) { .summary { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { text-align: left; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px 9px; cursor: pointer; display: grid; gap: 2px; }
+.stat:hover { border-color: var(--ink-3); }
+.stat b { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--ink-2); line-height: 1.3; }
+.stat.hot b { color: var(--bad); }
+.stat.amber b { color: var(--warn); }
+
+/* Filters */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; margin-bottom: 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--sheet); }
+.seg button { background: none; border: 0; padding: 7px 12px; cursor: pointer; font-size: 14px; color: var(--ink-2); white-space: nowrap; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.field { display: grid; gap: 4px; }
+.field > span { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+input[type="text"], input[type="search"], input[type="date"], input[type="number"], input[type="email"], select, textarea {
+  background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 7px 10px; min-width: 0; max-width: 100%;
+}
+textarea { width: 100%; resize: vertical; }
+.filters input[type="search"] { width: 260px; }
+@media (max-width: 520px) { .filters input[type="search"] { width: 100%; } }
+.toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.toggle { border: 1px solid var(--line); background: var(--sheet); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; color: var(--ink-2); }
+.toggle[aria-pressed="true"] { background: var(--hazard); color: var(--hazard-ink); border-color: var(--hazard); font-weight: 600; }
+.resultline { font-size: 13px; color: var(--ink-3); margin: 0 0 8px; }
+
+/* Bid rows */
+.list { display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 14px; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; cursor: pointer; text-align: left; width: 100%; }
+.row:hover { border-color: var(--ink-3); }
+@media (max-width: 640px) { .row { grid-template-columns: 64px minmax(0, 1fr); } .row .side { grid-column: 1 / -1; justify-self: start; } }
+.stamp { border: 2px solid var(--ink); border-radius: 4px; text-align: center; padding: 5px 2px 4px; align-self: start; display: grid; gap: 0; }
+.stamp b { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: .95; font-variant-numeric: tabular-nums; }
+.stamp small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.stamp em { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--ink-2); border-top: 1px solid var(--line); margin-top: 3px; padding-top: 2px; }
+.stamp.soon { border-color: var(--bad); }
+.stamp.soon b { color: var(--bad); }
+.stamp.closed { border-color: var(--line); opacity: .7; }
+.body { min-width: 0; display: grid; gap: 4px; }
+.tno { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); overflow-wrap: anywhere; }
+.desc { font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.org { font-size: 13.5px; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+.chip { font-size: 12px; border-radius: 4px; padding: 1px 7px; background: var(--wash); color: var(--ink-2); white-space: nowrap; }
+.chip.grade { background: var(--hazard); color: var(--hazard-ink); font-family: var(--mono); font-weight: 500; }
+.chip.nograde { border: 1px dashed var(--ink-3); background: transparent; }
+.chip.bad { background: var(--bad-bg); color: var(--bad); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.ok { background: var(--ok-bg); color: var(--ok); }
+.chip.info { background: var(--info-bg); color: var(--info); }
+.side { display: grid; gap: 6px; justify-items: end; align-content: start; }
+.status { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; background: var(--wash); color: var(--ink-2); white-space: nowrap; }
+.status.s-interested, .status.s-preparing, .status.s-docs_uploaded, .status.s-purchased { background: var(--info-bg); color: var(--info); }
+.status.s-purchase { background: var(--warn-bg); color: var(--warn); }
+.status.s-pack_ready, .status.s-submitted, .status.s-won { background: var(--ok-bg); color: var(--ok); }
+.status.s-no_bid, .status.s-lost { background: var(--wash); color: var(--ink-3); }
+.empty { background: var(--sheet); border: 1px dashed var(--line); border-radius: var(--r); padding: 28px; text-align: center; color: var(--ink-2); }
+.more { margin-top: 12px; }
+
+/* Buttons */
+.btn { background: var(--btn); color: var(--btn-ink); border: 1px solid var(--btn); border-radius: var(--r); padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 14px; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.small { padding: 3px 10px; font-size: 13px; font-weight: 500; }
+.btn.warn { background: var(--hazard); color: var(--hazard-ink); border-color: var(--hazard); }
+.btn:disabled { opacity: .5; cursor: progress; }
+.linkbtn { background: none; border: 0; color: var(--link); cursor: pointer; padding: 0; text-decoration: underline; font-size: 13px; }
+
+/* Sheet */
+.scrim { position: fixed; inset: 0; background: rgba(10, 14, 12, .45); z-index: 40; }
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 100%); background: var(--paper); z-index: 50; overflow-y: auto; box-shadow: var(--shadow); padding: calc(env(safe-area-inset-top, 0px) + 18px) 22px calc(env(safe-area-inset-bottom, 0px) + 40px); }
+@media (max-width: 520px) { .sheet { padding-inline: 16px; } }
+.sheet-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 8px; }
+.sheet h2 { font-size: 21px; line-height: 1.3; margin: 4px 0 6px; text-wrap: balance; overflow-wrap: anywhere; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin: 14px 0; }
+@media (max-width: 520px) { .facts { grid-template-columns: minmax(0, 1fr); } }
+.fact { background: var(--sheet); padding: 9px 12px; min-width: 0; }
+.fact dt { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.fact dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.box { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; margin: 12px 0; }
+.box h3 { margin: 0 0 8px; font-family: var(--display); font-weight: 700; font-size: 18px; letter-spacing: .04em; text-transform: uppercase; }
+.box.alert { border-color: var(--warn); background: var(--warn-bg); color: var(--ink); }
+.doclist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.doclist li { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.doclist li:last-child { border-bottom: 0; padding-bottom: 0; }
+.doclist .nm { min-width: 0; overflow-wrap: anywhere; flex: 1 1 240px; }
+.ext { font-family: var(--mono); font-size: 11px; text-transform: uppercase; background: var(--wash); border-radius: 3px; padding: 0 5px; margin-right: 6px; }
+.pre { white-space: pre-wrap; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; }
+@media (max-width: 640px) { .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); } }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.copybox { font-family: var(--mono); font-size: 12.5px; background: var(--wash); border-radius: var(--r); padding: 10px; white-space: pre-wrap; overflow-wrap: anywhere; user-select: all; }
+
+/* Library */
+.readiness { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; margin-bottom: 16px; }
+.meter { flex: 1 1 260px; height: 10px; background: var(--wash); border-radius: 999px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--ok); }
+.libgroup { margin-top: 22px; }
+.libgroup > h3 { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 8px; color: var(--ink-2); }
+.cats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .cats { grid-template-columns: minmax(0, 1fr); } }
+.cat { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.cat header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.cat header b { font-weight: 700; }
+.cat .hint { font-size: 13px; color: var(--ink-3); }
+.cat.missing { border-style: dashed; }
+
+/* Tables */
+.tablewrap { overflow-x: auto; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; background: var(--wash); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--wash); }
+
+.profile-section { margin-bottom: 20px; }
+.profile-section h3 { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 10px; color: var(--ink-2); }
+.formcard { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; margin-bottom: 18px; }
+.formcard h3 { margin: 0 0 12px; font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: .04em; text-transform: uppercase; }
+.muted { color: var(--ink-3); font-size: 13px; }
+.mono { font-family: var(--mono); }
+
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 9px 16px; border-radius: var(--r); z-index: 80; font-size: 14px; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+.confirm { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
+.loading { color: var(--ink-3); font-size: 14px; padding: 18px 0; }
+
+/* Website additions: sign-in, account menu, dialogs, file buttons */
+.login { min-height: 100vh; display: grid; place-items: center; padding-inline: 16px; background:
+  linear-gradient(180deg, var(--charcoal) 0 220px, var(--paper) 220px); }
+.login-card { width: min(420px, 100%); background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 26px 24px; display: grid; gap: 14px; }
+.login-card .logo { justify-self: start; border: 1px solid var(--line); }
+.login-card h1 { margin: 0; font-family: var(--display); font-size: 30px; letter-spacing: .04em; text-transform: uppercase; line-height: 1; }
+.login-card h1 span { color: var(--hazard); }
+.login-card p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.login-card .field input { width: 100%; }
+.login-card .btn { width: 100%; padding: 10px 14px; }
+.err { color: var(--bad); font-size: 14px; min-height: 1em; }
+.acct { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.acct button { white-space: nowrap; }
+dialog.modal { border: 1px solid var(--line); border-radius: 10px; padding: 0; width: min(480px, calc(100% - 32px)); background: var(--sheet); color: var(--ink); box-shadow: var(--shadow); }
+dialog.modal::backdrop { background: rgba(10, 14, 12, .5); }
+dialog.modal form { padding: 20px; display: grid; gap: 12px; }
+dialog.modal h3 { margin: 0; font-family: var(--display); font-size: 22px; letter-spacing: .03em; text-transform: uppercase; }
+.secret { font-family: var(--mono); font-size: 20px; letter-spacing: .06em; background: var(--wash); border-radius: var(--r); padding: 10px 12px; user-select: all; }
+.jobs { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+.jobs li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; font-size: 14px; }
+.filebtns { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.scanline { flex-wrap: wrap; }
+@media (max-width: 700px) {
+  .scanline { width: 100%; }
+  #scanText { flex: 1 1 100%; }
+  #whoami { display: none; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="login" id="loginView" hidden>
+  <form class="login-card" id="loginForm">
+    <span class="logo"><img src="logo.png" alt="Pump Group SA" width="85" height="44"></span>
+    <h1>Tender <span>Desk</span></h1>
+    <p>Public tenders and quotations for CE and ME grades 1 to 8, and everything Pump Group needs to bid for them.</p>
+    <label class="field"><span>Email</span><input type="email" id="liEmail" autocomplete="username" required></label>
+    <label class="field"><span>Password</span><input type="password" id="liPass" autocomplete="current-password" required></label>
+    <button class="btn" type="submit" id="liBtn">Sign in</button>
+    <div class="err" id="liErr" role="alert"></div>
+    <p class="muted">Forgot your password? Ask a Tender Desk administrator to reset it.</p>
+  </form>
+</div>
+<div id="appView" hidden>
+<header class="bar">
+  <div class="wrap">
+    <div class="brand"><span class="logo"><img src="logo.png" alt="Pump Group SA" width="85" height="44"></span><div><h1>Tender <span>Desk</span></h1><small>CE and ME grades 1 to 8 · every province and municipality · quotations and panels</small></div></div>
+    <div class="scanline"><i class="dot" id="scanDot"></i><span id="scanText">Connecting…</span><button id="refreshBtn" type="button">Refresh</button><span class="acct"><span id="whoami"></span><button type="button" id="pwBtn">Password</button><button type="button" id="signOutBtn">Sign out</button></span></div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap" role="tablist">
+    <button role="tab" data-tab="bids" aria-selected="true">Bids<span class="count" id="cBids"></span></button>
+    <button role="tab" data-tab="library" aria-selected="false">Document library<span class="count" id="cLib"></span></button>
+    <button role="tab" data-tab="people" aria-selected="false">People<span class="count" id="cPeople"></span></button>
+    <button role="tab" data-tab="profile" aria-selected="false">Company details<span class="count" id="cProf"></span></button>
+    <button role="tab" data-tab="rates" aria-selected="false">Costs and rates<span class="count" id="cRates"></span></button>
+    <button role="tab" data-tab="scanner" aria-selected="false">Scanner</button>
+    <button role="tab" data-tab="team" aria-selected="false" id="teamTab" hidden>Team</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div id="notice" hidden></div>
+
+  <!-- BIDS -->
+  <section id="tab-bids" data-panel="bids">
+    <div class="summary" id="summary">
+      <button class="stat" type="button" data-quick="matched"><b>–</b><span>Matching open bids</span></button>
+      <button class="stat hot" type="button" data-quick="closing"><b>–</b><span>Close within 7 days</span></button>
+      <button class="stat amber" type="button" data-quick="briefing"><b>–</b><span>Compulsory briefings in 7 days</span></button>
+      <button class="stat amber" type="button" data-quick="purchase"><b>–</b><span>Documents to buy</span></button>
+      <button class="stat" type="button" data-quick="active"><b>–</b><span>Our bids in progress</span></button>
+      <button class="stat" type="button" data-quick="to_screen"><b>–</b><span>Waiting for a document check</span></button>
+      <button class="stat hot" type="button" data-quick="missing"><b>–</b><span>Our bids missing documents</span></button>
+    </div>
+    <div id="missingPanel" hidden></div>
+
+    <div class="filters">
+      <div class="seg" id="segStatus" role="group" aria-label="Which bids">
+        <button type="button" data-status="matched" aria-pressed="true">Matching</button>
+        <button type="button" data-status="to_screen" aria-pressed="false">Needs check</button>
+        <button type="button" data-status="active" aria-pressed="false">Our bids</button>
+        <button type="button" data-status="excluded" aria-pressed="false">Excluded</button>
+      </div>
+      <input type="search" id="q" placeholder="Search tender no, works or municipality" aria-label="Search">
+      <select id="province" aria-label="Province"><option value="">All provinces</option></select>
+      <select id="klass" aria-label="CIDB class"><option value="">CE and ME</option><option value="CE">CE only</option><option value="ME">ME only</option></select>
+      <select id="maxGrade" aria-label="Our highest grade"><option value="">Any grade 1 to 8</option></select>
+      <select id="sort" aria-label="Sort"><option value="closing">Closing soonest</option><option value="new">Newest first</option></select>
+    </div>
+    <div class="toggles" style="margin-bottom:14px">
+      <button class="toggle" type="button" data-flag="panel" aria-pressed="false">Panels and rate-based</button>
+      <button class="toggle" type="button" data-flag="rfq" aria-pressed="false">Quotations (RFQ)</button>
+      <button class="toggle" type="button" data-flag="purchase" aria-pressed="false">Documents to buy</button>
+      <button class="toggle" type="button" data-flag="briefing" aria-pressed="false">Compulsory briefing ahead</button>
+      <button class="toggle" type="button" data-flag="changed" aria-pressed="false">Changed or addendum</button>
+      <button class="toggle" type="button" data-flag="closing7" aria-pressed="false">Closing in 7 days</button>
+    </div>
+    <p class="resultline" id="resultline"></p>
+    <div class="list" id="list"><div class="loading">Loading bids…</div></div>
+    <div class="more"><button class="btn ghost" type="button" id="moreBtn" hidden>Show more</button></div>
+  </section>
+
+  <!-- LIBRARY -->
+  <section id="tab-library" data-panel="library" hidden>
+    <h2 class="section">Document library</h2>
+    <p class="lede">Keep every returnable here once and update it when it expires. Each bid pack pulls the latest valid copy in the order the tender asks for. PDFs and images up to 45 MB.</p>
+    <div class="readiness"><div><b id="readyText">–</b> <span class="muted">core categories covered with a valid document</span></div><div class="meter" aria-hidden="true"><i id="readyBar" style="width:0%"></i></div></div>
+
+    <form class="formcard" id="libForm">
+      <h3>Add a document</h3>
+      <div class="grid3">
+        <label class="field"><span>Category</span><select id="libCat" required></select></label>
+        <label class="field"><span>Title</span><input type="text" id="libTitle" required placeholder="e.g. Tax compliance PIN letter Oct 2026"></label>
+        <label class="field"><span>File (PDF or image)</span><input type="file" id="libFile" accept="application/pdf,image/png,image/jpeg,image/webp" required></label>
+        <label class="field"><span>Issued on</span><input type="date" id="libIssued"></label>
+        <label class="field"><span>Expires on</span><input type="date" id="libExpires"></label>
+        <label class="field"><span>Notes</span><input type="text" id="libNotes" placeholder="Optional"></label>
+        <label class="field" id="libPersonField" hidden><span>Person</span><select id="libPerson"><option value="">Choose who this belongs to</option></select></label>
+      </div>
+      <div class="grid3" id="expFields" hidden style="margin-top:10px">
+        <label class="field"><span>Client</span><input type="text" id="libClient" placeholder="e.g. Mangaung Metro"></label>
+        <label class="field"><span>Contract value (R)</span><input type="number" id="libValue" min="0" step="0.01"></label>
+        <label class="field"><span>Class of work</span><select id="libClass"><option value="">–</option><option>CE</option><option>ME</option></select></label>
+        <label class="field"><span>Completed on</span><input type="date" id="libCompleted"></label>
+      </div>
+      <p class="muted" id="catHint" style="margin:10px 0 0"></p>
+      <div class="actions"><button class="btn" type="submit" id="libSave">Upload to library</button><span class="muted" id="libMsg"></span></div>
+    </form>
+    <div id="libGroups"><div class="loading">Loading library…</div></div>
+  </section>
+
+  <!-- PEOPLE -->
+  <section id="tab-people" data-panel="people" hidden>
+    <h2 class="section">Key personnel</h2>
+    <p class="lede">Tender Desk picks the best person for each position a tender scores, tailors their CV to that tender's requirement, and drafts an appointment letter on the letterhead for signing. Keep each person's qualifications, registrations and projects current here. Upload certified copies under each person.</p>
+    <div class="actions" style="margin:0 0 14px"><button class="btn" type="button" id="addPerson">Add a person</button><span class="muted">ID numbers are kept on file for CVs but never shown on this page.</span></div>
+    <form class="formcard" id="personForm" hidden></form>
+    <div class="people" id="peopleList"><div class="loading">Loading people…</div></div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="tab-profile" data-panel="profile" hidden>
+    <h2 class="section">Company details</h2>
+    <p class="lede">These answers fill the standard forms in every bid (SBD 1, SBD 4, SBD 6.1, MBD forms, Form of Offer details, cover pages). Fill them once; update when something changes.</p>
+    <form id="profForm"><div id="profFields"><div class="loading">Loading company details…</div></div>
+      <div class="actions"><button class="btn" type="submit">Save company details</button><span class="muted" id="profMsg"></span></div>
+    </form>
+  </section>
+
+  <!-- RATES -->
+  <section id="tab-rates" data-panel="rates" hidden>
+    <h2 class="section">Costs and rates</h2>
+    <p class="lede">Every rate is a base rate times how far its index has moved since that rate was set. When Stats SA or the fuel price moves, every rate and every BoQ priced from them moves with it. A scheduled task adds the new index values on the 8th and 28th of each month. Replace market rates with your own supplier quotes as you get them.</p>
+    <nav class="subnav" aria-label="Cost sections">
+      <a class="toggle" href="#cIndices">Indices</a><a class="toggle" href="#cResources">Resources</a><a class="toggle" href="#cBuildups">Build-ups</a><a class="toggle" href="#cRates">Rates library</a>
+    </nav>
+
+    <div class="formcard" id="cIndices">
+      <h3>Indices</h3>
+      <div class="tablewrap"><table><thead><tr><th>Index</th><th>Latest</th><th class="num">Value</th><th>Last 2 years</th><th>Source</th></tr></thead><tbody id="idxRows"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody></table></div>
+      <form id="idxForm" class="grid3" style="margin-top:12px">
+        <label class="field"><span>Index</span><select id="idxKey"></select></label>
+        <label class="field"><span>Month</span><input type="month" id="idxPeriod" required></label>
+        <label class="field"><span>Value</span><input type="number" id="idxValue" step="0.01" required></label>
+        <label class="field" style="grid-column: span 2"><span>Source</span><input type="text" id="idxSource" placeholder="e.g. Stats SA P0141 September 2026, Table B1"></label>
+        <div class="field"><span>&nbsp;</span><button class="btn small" type="submit">Add value</button></div>
+      </form>
+    </div>
+
+    <div class="formcard" id="cResources">
+      <h3>Resources: labour, plant and materials</h3>
+      <p class="hint-line" style="margin:0 0 10px">Rows marked <span class="chip warn">Market estimate</span> come from published price lists and rate cards. Click a row to replace it with your own supplier or hire quote.</p>
+      <div class="tablewrap"><table><thead><tr><th>Code</th><th>Resource</th><th>Unit</th><th class="num">Base rate</th><th>Base date</th><th>Index</th><th class="num">Rate today</th><th class="num">Change</th><th>Source</th><th></th></tr></thead><tbody id="resRows"><tr><td colspan="10" class="muted">Loading…</td></tr></tbody></table></div>
+      <form id="resForm" style="margin-top:12px">
+        <input type="hidden" id="resId">
+        <div class="grid3">
+          <label class="field"><span>Code</span><input type="text" id="resCode" required placeholder="e.g. M-PVC160"></label>
+          <label class="field"><span>Type</span><select id="resType"><option value="labour">Labour</option><option value="plant">Plant</option><option value="material">Material</option><option value="subcontract">Subcontract</option></select></label>
+          <label class="field"><span>Unit</span><input type="text" id="resUnit" required placeholder="hour, day, m³, 6 m length"></label>
+          <label class="field" style="grid-column: span 2"><span>Description</span><input type="text" id="resDesc" required placeholder="e.g. uPVC sewer pipe 160 mm Class 34 SN8, 6 m"></label>
+          <label class="field"><span>Base rate (R, excl. VAT)</span><input type="number" id="resRate" step="0.01" min="0" required></label>
+          <label class="field"><span>Price date</span><input type="date" id="resDate"></label>
+          <label class="field"><span>Escalate with</span><select id="resIndex"><option value="">No escalation</option></select></label>
+          <label class="field"><span>Supplier</span><input type="text" id="resSupplier"></label>
+          <label class="field" style="grid-column: span 2"><span>Source</span><input type="text" id="resSource" placeholder="Quote number and date"></label>
+          <label class="field"><span>Notes</span><input type="text" id="resNotes"></label>
+        </div>
+        <div class="actions"><button class="btn small" type="submit" id="resSave">Save resource</button><button class="btn ghost small" type="button" id="resClear">Clear</button><span class="muted" id="resMsg"></span></div>
+      </form>
+    </div>
+
+    <div class="formcard" id="cBuildups">
+      <h3>Rate build-ups</h3>
+      <p class="hint-line" style="margin:0 0 10px">A build-up prices one unit of work from resources: quantity of each per unit, waste, then overheads and profit. Its rate follows the resource rates automatically.</p>
+      <div class="tablewrap"><table><thead><tr><th>Code</th><th>Work item</th><th>Unit</th><th>Made of</th><th class="num">OH&amp;P</th><th class="num">Rate today</th></tr></thead><tbody id="buRows"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody></table></div>
+      <form id="buForm" style="margin-top:12px">
+        <div class="grid3">
+          <label class="field"><span>Code</span><input type="text" id="buCode" required placeholder="BU-PVC160"></label>
+          <label class="field"><span>Work item</span><input type="text" id="buDesc" required placeholder="Supply, lay and joint 160 mm uPVC sewer pipe"></label>
+          <label class="field"><span>Unit</span><input type="text" id="buUnit" required placeholder="m"></label>
+          <label class="field" style="grid-column: span 2"><span>Resources, one per line: code | quantity per unit | waste %</span><textarea id="buComps" rows="4" placeholder="M-PVC110 | 0.1667 | 3&#10;L-G1A | 0.3&#10;L-G8A | 0.05"></textarea></label>
+          <label class="field"><span>Overheads and profit (%)</span><input type="number" id="buOhp" step="0.5" min="0" value="15"></label>
+        </div>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="buToRates" checked> Add it to the rates library so BoQs are priced from it</label>
+        <div class="actions"><button class="btn small" type="submit">Save build-up</button><button class="btn ghost small" type="button" id="buClear">Clear</button><span class="muted" id="buMsg"></span></div>
+      </form>
+    </div>
+
+    <h3 class="section" id="cRates" style="font-size:20px;margin-top:6px">Rates library</h3>
+    <p class="hint-line" style="margin:0 0 12px">Rates BoQ items are matched against. A rate can be a fixed price, a price that escalates with an index, or a build-up.</p>
+    <form class="formcard" id="rateForm">
+      <h3 id="rateFormTitle">Add a rate</h3>
+      <input type="hidden" id="rateId">
+      <div class="grid3">
+        <label class="field"><span>Item code</span><input type="text" id="rateCode" placeholder="e.g. 8.2.1"></label>
+        <label class="field" style="grid-column: span 2"><span>Description</span><input type="text" id="rateDesc" required placeholder="e.g. Excavate trench in soft material 0 to 1.5 m deep"></label>
+        <label class="field"><span>Unit</span><input type="text" id="rateUnit" placeholder="m³, m, No, Sum"></label>
+        <label class="field"><span>Rate (R, excl. VAT)</span><input type="number" id="rateRate" step="0.01" min="0"></label>
+        <label class="field"><span>Category</span><input type="text" id="rateCat" placeholder="Earthworks, Pipework, P&G…"></label>
+        <label class="field"><span>Source</span><input type="text" id="rateSrc" placeholder="Tender or supplier quote"></label>
+        <label class="field"><span>Price date</span><input type="date" id="rateFrom"></label>
+        <label class="field"><span>Escalate with</span><select id="rateIndex"><option value="">No escalation</option></select></label>
+        <label class="field"><span>Or price from build-up</span><select id="rateBu"><option value="">None</option></select></label>
+        <label class="field" style="grid-column: span 2"><span>Notes</span><input type="text" id="rateNotes"></label>
+      </div>
+      <div class="actions"><button class="btn" type="submit">Save rate</button><button class="btn ghost" type="button" id="rateReset">Clear</button><span class="muted" id="rateMsg"></span></div>
+    </form>
+    <details class="formcard"><summary><b>Import many rates</b> <span class="muted">paste rows copied from Excel: code, description, unit, rate, category</span></summary>
+      <textarea id="rateImport" rows="6" placeholder="1.1	Site establishment	Sum	85000	P&G&#10;8.2.1	Excavate trench 0-1.5 m soft	m³	145	Earthworks"></textarea>
+      <div class="actions"><button class="btn" type="button" id="rateImportBtn">Import rows</button><span class="muted" id="rateImportMsg"></span></div>
+    </details>
+    <div class="filters"><input type="search" id="rateQ" placeholder="Search rates" aria-label="Search rates"></div>
+    <div class="tablewrap"><table><thead><tr><th>Code</th><th>Description</th><th>Unit</th><th class="num">Rate today (R)</th><th>Basis</th><th>Category</th><th>Source</th><th></th></tr></thead><tbody id="rateRows"><tr><td colspan="8" class="muted">Loading rates…</td></tr></tbody></table></div>
+  </section>
+
+  <!-- SCANNER -->
+  <section id="tab-scanner" data-panel="scanner" hidden>
+    <h2 class="section">Scanner</h2>
+    <p class="lede">Every hour at seven minutes past, the scanner reads every open advert on the National Treasury eTenders portal (national and provincial departments, all municipalities, SOEs such as Eskom, Transnet and SANRAL), stores new ones, notices closing-date changes and addenda, and sorts each advert by CIDB grading. Adverts that do not state a grading but look like civil or mechanical works are checked against their documents by the Tender Desk three times a day, and you get an email summary.</p>
+    <form class="formcard" id="matchForm">
+      <h3>What counts as a match</h3>
+      <div class="grid3">
+        <fieldset class="field" style="border:0;padding:0;margin:0"><span>CIDB classes</span>
+          <label><input type="checkbox" id="mCE" value="CE"> CE (civil engineering)</label>
+          <label><input type="checkbox" id="mME" value="ME"> ME (mechanical engineering)</label>
+        </fieldset>
+        <label class="field"><span>Lowest grade</span><select id="mMin"></select></label>
+        <label class="field"><span>Highest grade</span><select id="mMax"></select></label>
+      </div>
+      <p class="muted">PE (potentially emerging) designations such as 5CE PE are included. Quotations and panels count as matches. Saving re-sorts adverts that Tender Desk has not yet checked.</p>
+      <div class="actions"><button class="btn" type="submit">Save and re-sort</button><span class="muted" id="matchMsg"></span></div>
+    </form>
+    <div class="tablewrap"><table><thead><tr><th>Scan started</th><th class="num">Adverts read</th><th class="num">New</th><th class="num">Changed</th><th class="num">New matches</th><th class="num">To check</th><th>Result</th></tr></thead><tbody id="runRows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody></table></div>
+  </section>
+  <!-- TEAM -->
+  <section id="tab-team" data-panel="team" hidden>
+    <h2 class="section">Team</h2>
+    <p class="lede">People who can sign in to the Tender Desk. Add someone, then give them the temporary password shown. They choose their own password the first time they sign in.</p>
+    <form class="formcard" id="teamForm">
+      <h3>Add a person</h3>
+      <div class="grid3">
+        <label class="field"><span>Email</span><input type="email" id="tmEmail" required autocomplete="off"></label>
+        <label class="field"><span>Full name</span><input type="text" id="tmName" required></label>
+        <label class="field"><span>Access</span><select id="tmRole"><option value="member">Member: bids, documents, people, costs</option><option value="admin">Administrator: also manages the team</option></select></label>
+      </div>
+      <div class="actions"><button class="btn" type="submit">Add to the team</button><span class="muted" id="tmMsg"></span></div>
+    </form>
+    <div class="tablewrap"><table><thead><tr><th>Name</th><th>Email</th><th>Access</th><th>Last signed in</th><th></th></tr></thead><tbody id="teamRows"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody></table></div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" hidden aria-label="Tender details"></aside>
+<div class="toast" id="toast" hidden></div>
+
+
+</div>
+<dialog class="modal" id="pwDialog">
+  <form id="pwForm" method="dialog">
+    <h3 id="pwTitle">Choose your password</h3>
+    <p class="muted" id="pwLede" style="margin:0">At least 10 characters. You will use it to sign in from now on.</p>
+    <label class="field"><span>New password</span><input type="password" id="pwNew" autocomplete="new-password" minlength="10" required></label>
+    <label class="field"><span>Type it again</span><input type="password" id="pwAgain" autocomplete="new-password" minlength="10" required></label>
+    <div class="err" id="pwErr" role="alert"></div>
+    <div class="actions" style="margin:0"><button class="btn" type="submit" id="pwSave">Save password</button><button class="btn ghost" type="button" id="pwCancel">Cancel</button></div>
+  </form>
+</dialog>
+<dialog class="modal" id="secretDialog">
+  <form method="dialog">
+    <h3>Temporary password</h3>
+    <p style="margin:0" id="secretFor"></p>
+    <div class="secret" id="secretValue"></div>
+    <p class="muted" style="margin:0">Give it to them in person or by phone. It is shown only once. They will choose their own password when they first sign in.</p>
+    <div class="actions" style="margin:0"><button class="btn" type="button" id="secretCopy">Copy</button><button class="btn ghost" value="close">Done</button></div>
+  </form>
+</dialog>
+
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

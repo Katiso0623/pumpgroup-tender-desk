@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+builder/templates/*.docx
+builder/templates/*.jpg
+site/supabase.js
