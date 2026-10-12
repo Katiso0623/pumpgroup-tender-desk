@@ -391,6 +391,13 @@ dialog.modal h3 { margin: 0; font-family: var(--display); font-size: 22px; lette
     <h2 class="section">Document library</h2>
     <p class="lede">Keep every returnable here once and update it when it expires. Each bid pack pulls the latest valid copy in the order the tender asks for. PDFs and images up to 45 MB.</p>
     <div class="readiness"><div><b id="readyText">–</b> <span class="muted">core categories covered with a valid document</span></div><div class="meter" aria-hidden="true"><i id="readyBar" style="width:0%"></i></div></div>
+    <div class="formcard" id="moveBox" hidden>
+      <h3>Add the files for documents already listed</h3>
+      <p class="muted" id="moveText" style="margin:0 0 10px"></p>
+      <label class="field"><span>Select the files (you can select them all at once)</span><input type="file" id="moveFiles" multiple accept="application/pdf,image/png,image/jpeg,image/webp"></label>
+      <p class="muted" id="moveMsg" style="margin:8px 0 0"></p>
+    </div>
+    <input type="file" id="attachOne" accept="application/pdf,image/png,image/jpeg,image/webp" hidden>
 
     <form class="formcard" id="libForm">
       <h3>Add a document</h3>

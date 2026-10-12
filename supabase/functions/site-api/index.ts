@@ -4,12 +4,10 @@
 //   bootstrap                           internal: create the first administrator
 //   fetch_tender_docs                   staff: copy a tender's documents from eTenders into the bid's files
 //   extract                             staff: read the text of an uploaded tender document (PDFs go to the builder)
-//   import                              internal: move encrypted library files from GitHub into storage (one-off)
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { strFromU8, unzipSync } from "npm:fflate@0.8.2";
 
 const BUCKET = "bid-files";
-const REPO_RAW = "https://raw.githubusercontent.com/Katiso0623/pumpgroup-tender-desk";
 const MAX_BYTES = 45 * 1024 * 1024;
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -110,7 +108,22 @@ async function fetchTenderDocs(admin: SupabaseClient, tenderId: string, who: str
   const { data: have } = await admin.from("bid_files").select("storage_path").eq("tender_id", tenderId);
   const got = new Set((have || []).map((h: any) => h.storage_path));
   const results: any[] = [];
-  for (const d of docs) {
+  // Tender documents first; standards, drawings and manuals last. At most 20 per request.
+  const score = (d: any) => {
+    const n = String(d.name || "").toLowerCase();
+    const e = String(d.ext || "").toLowerCase();
+    if (![".pdf", ".docx", ".doc", ".xlsx", ".xls"].includes(e)) return -100;
+    let s = 0;
+    if (/(tender|bid|rfq|quotation|itt|invitation|returnable|form|schedule|pricing|price|boq|bill of quantities|offer|scope|sow|specification|evaluation|criteria|sbd|mbd|declaration|contract data|addend)/.test(n)) s += 5;
+    if (e === ".docx" || e === ".xlsx") s += 1;
+    if (/(drawing|layout|section|standard|manual|guideline|procedure|work instruction|policy|plan_|photo)/.test(n)) s -= 4;
+    return s;
+  };
+  const ranked = [...docs].map((d) => ({ d, s: score(d) })).filter((x) => x.s > -100).sort((a, b) => b.s - a.s);
+  const started = Date.now();
+  let skipped = 0;
+  for (const { d } of ranked) {
+    if (results.filter((r) => r.status === "saved").length >= 20 || Date.now() - started > 110000) { skipped++; continue; }
     const ext = String(d.ext || (String(d.name || "").match(/\.[A-Za-z0-9]+$/) || [""])[0]).toLowerCase();
     const base = safeName(String(d.name || "document").replace(/\.[A-Za-z0-9]+$/, ""));
     const path = `bids/${safeName(tenderId)}/etenders/${base}${ext}`;
@@ -137,31 +150,8 @@ async function fetchTenderDocs(admin: SupabaseClient, tenderId: string, who: str
   if (results.some((r) => r.status === "saved") && ["open", "interested", "purchased"].includes(t.bid_status)) {
     await admin.from("tenders").update({ bid_status: "docs_uploaded", updated_at: new Date().toISOString() }).eq("id", tenderId);
   }
+  if (skipped) results.push({ name: `${skipped} more document(s)`, status: "not downloaded: press the button again, or download them from eTenders" });
   return { ok: true, results };
-}
-
-async function importFiles(admin: SupabaseClient, body: any) {
-  const keyBytes = Uint8Array.from(atob(String(body.key || "")), (c) => c.charCodeAt(0));
-  if (keyBytes.length !== 32) throw new UserError("bad key");
-  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
-  const out: any[] = [];
-  for (const it of (body.items || []) as any[]) {
-    try {
-      const res = await fetch(`${REPO_RAW}/${body.ref || "transfer"}/${it.src}`);
-      if (!res.ok) { out.push({ src: it.src, status: `GitHub ${res.status}` }); continue; }
-      const blob = new Uint8Array(await res.arrayBuffer());
-      const plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: blob.slice(0, 12) }, key, blob.slice(12)));
-      const up = await admin.storage.from(BUCKET).upload(it.path, plain, { contentType: it.content_type || "application/pdf", upsert: true });
-      if (up.error) { out.push({ src: it.src, status: up.error.message }); continue; }
-      if (it.library_id) {
-        await admin.from("library_docs").update({ storage_path: it.path, size_bytes: plain.byteLength }).eq("id", it.library_id);
-      }
-      out.push({ src: it.src, status: "ok", bytes: plain.byteLength });
-    } catch (e) {
-      out.push({ src: it.src, status: e instanceof Error ? e.message.slice(0, 160) : "failed" });
-    }
-  }
-  return { ok: true, items: out };
 }
 
 Deno.serve(async (req: Request) => {
@@ -228,9 +218,6 @@ Deno.serve(async (req: Request) => {
         if (error || !f?.storage_path) throw new UserError("File not found.");
         return json(await readText(admin, f));
       }
-      case "import":
-        if (!internal) return json({ error: "forbidden" }, 403);
-        return json(await importFiles(admin, body));
       default:
         return json({ error: "Unknown action" }, 400);
     }

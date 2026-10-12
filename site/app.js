@@ -559,10 +559,14 @@ function renderLibrary() {
       <div class="hint">${esc(c.hint)}</div>
       ${docs.length ? `<ul class="doclist">${docs.map(d => { const s = docState(d, c); const who = d.person_id ? (st.people.find(p => p.id === d.person_id) || {}).full_name : "";
         return `<li><span class="nm">${esc(d.title)}${who ? ` <span class="muted">· ${esc(who)}</span>` : ""}${d.client ? ` <span class="muted">· ${esc(d.client)}${d.project_value ? " · " + rand(d.project_value) : ""}</span>` : ""}<br><span class="chip ${s.cls}">${esc(s.text)}</span></span>
-        <span class="actions" style="margin:0">${d.storage_path ? `<button class="btn ghost small" type="button" data-open="${esc(d.storage_path)}">Open</button>` : '<span class="chip warn">File not moved yet</span>'}<button class="linkbtn" type="button" data-archive="${esc(d.id)}">Retire</button></span></li>`; }).join("")}</ul>` : ""}
+        <span class="actions" style="margin:0">${d.storage_path ? `<button class="btn ghost small" type="button" data-open="${esc(d.storage_path)}">Open</button>` : `<button class="btn warn small" type="button" data-attach="${esc(d.id)}">Add file</button>`}<button class="linkbtn" type="button" data-archive="${esc(d.id)}">Retire</button></span></li>`; }).join("")}</ul>` : ""}
       <div><button class="linkbtn" type="button" data-addcat="${esc(c.key)}">Add ${docs.length ? "another" : "one"}</button></div></div>`;
   }).join("")}</div></div>`).join("");
   wireOpen($("#libGroups"));
+  const waiting = st.lib.filter(d => !d.storage_path);
+  $("#moveBox").hidden = !waiting.length;
+  if (waiting.length) $("#moveText").textContent = `${waiting.length} document${waiting.length === 1 ? " is" : "s are"} listed without a file (${waiting.slice(0, 3).map(d => d.file_name || d.title).join(", ")}${waiting.length > 3 ? "…" : ""}). Select the files and each one is matched to its document by file name.`;
+  $$("[data-attach]").forEach(b => b.onclick = () => { st.attachId = b.dataset.attach; $("#attachOne").value = ""; $("#attachOne").click(); });
   $$("[data-addcat]").forEach(b => b.onclick = () => { $("#libCat").value = b.dataset.addcat; catChanged(); $("#libForm").scrollIntoView({ behavior: "smooth", block: "start" }); $("#libTitle").focus(); });
   $$("[data-archive]").forEach(b => b.onclick = () => {
     const span = document.createElement("span"); span.className = "confirm";
@@ -579,6 +583,31 @@ function catChanged() {
   $("#catHint").textContent = c ? c.hint : "";
 }
 $("#libCat").addEventListener("change", catChanged);
+async function attachFile(doc, file) {
+  const up = await uploadFile(file, doc.person_id ? "people" : "library", true);
+  await api("attach_library_file", { id: doc.id, storage_path: up.path, size_bytes: up.size, content_type: file.type || "application/pdf" });
+}
+$("#attachOne").addEventListener("change", () => safe(async () => {
+  const file = $("#attachOne").files[0]; const doc = st.lib.find(d => d.id === st.attachId);
+  if (!file || !doc) return;
+  toast("Uploading…"); await attachFile(doc, file);
+  st.lib = await api("library"); renderLibrary(); toast("File added");
+}));
+$("#moveFiles").addEventListener("change", () => safe(async () => {
+  const files = [...$("#moveFiles").files]; if (!files.length) return;
+  const norm = n => String(n || "").toLowerCase().replace(/^.*[\\/]/, "").trim();
+  const waiting = st.lib.filter(d => !d.storage_path);
+  let done = 0; const unmatched = [];
+  for (const f of files) {
+    const doc = waiting.find(d => norm(d.file_name) === norm(f.name) && !d._done);
+    if (!doc) { unmatched.push(f.name); continue; }
+    $("#moveMsg").textContent = `Uploading ${done + 1} of ${files.length}: ${f.name}`;
+    try { await attachFile(doc, f); doc._done = true; done++; } catch (e) { unmatched.push(f.name + " (" + uploadError(e) + ")"); }
+  }
+  $("#moveMsg").textContent = `Added ${done} file${done === 1 ? "" : "s"}.` + (unmatched.length ? ` Not matched: ${unmatched.join(", ")}. Use Add file next to the document instead.` : "");
+  $("#moveFiles").value = "";
+  st.lib = await api("library"); renderLibrary(); loadDashboard();
+}));
 $("#libForm").addEventListener("submit", async e => {
   e.preventDefault();
   const file = $("#libFile").files[0]; if (!file) return;
