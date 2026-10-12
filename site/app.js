@@ -122,6 +122,8 @@ function showTab(name) {
   if (name === "scanner") loadScanner();
   if (name === "team") safe(loadTeam);
   if (name === "uploads") safe(loadUploads);
+  if (name === "activity") safe(() => loadActivity());
+  activityTimer(name === "activity");
 }
 
 /* ---------- dashboard + list ---------- */
@@ -1419,6 +1421,96 @@ $("#teamForm").addEventListener("submit", e => {
   }).finally(() => { if ($("#tmMsg").textContent === "Adding…") $("#tmMsg").textContent = ""; });
 });
 
+/* ---------- activity (administrators) ---------- */
+const AREA = {
+  bids: ["info", "Bid"], uploads: ["warn", "Uploads"], library: ["ok", "Library"], people: ["ok", "People"], company: ["", "Company"],
+  costs: ["", "Costs"], scanner: ["", "Scanner"], team: ["bad", "Team"], auto: ["info", "Tender Desk"], view: ["", "Opened"], signin: ["", "Signed in"]
+};
+const act = { days: 7, user: "", area: "changes", q: "", offset: 0, rows: [], total: 0, people: [], timer: null };
+function agoText(d) {
+  if (!d) return "Never signed in";
+  const m = Math.round((Date.now() - new Date(d)) / 60000);
+  if (m < 2) return "Active now";
+  if (m < 60) return `Active ${m} minutes ago`;
+  if (fmtDay(d) === fmtDay(new Date())) return "Last active today at " + fmtTime(d);
+  return "Last active " + fmtDate(d, true);
+}
+function actFilters(extra = {}) {
+  return { days: act.days, user_id: act.user, area: act.area === "all" ? "" : act.area, q: act.q, ...extra };
+}
+async function loadActivity(append) {
+  if (!append) act.offset = 0;
+  const [people, feed] = await Promise.all([append ? Promise.resolve(act.people) : api("activity_people", { days: act.days }),
+    api("activity", actFilters({ limit: 100, offset: act.offset }))]);
+  act.people = people || [];
+  act.total = feed.total || 0;
+  act.rows = append ? act.rows.concat(feed.rows || []) : (feed.rows || []);
+  renderActivity();
+}
+function renderActivity() {
+  const sel = $("#actUser");
+  const cur = act.user;
+  sel.innerHTML = `<option value="">Everyone</option>${act.people.map(p => `<option value="${esc(p.user_id)}">${esc(p.full_name || p.email)}</option>`).join("")}<option value="auto">Tender Desk and the bid pack builder</option>`;
+  sel.value = cur;
+  const period = { 1: "today", 7: "in the last 7 days", 30: "in the last 30 days", 90: "in the last 90 days" }[act.days] || `in the last ${act.days} days`;
+  $("#actPeople").innerHTML = act.people.map(p => {
+    const now = p.active_now;
+    return `<button class="pcard ${act.user === p.user_id ? "on" : ""}" type="button" data-actuser="${esc(p.user_id)}">
+      <header><span class="dot ${now ? "live" : ""}" aria-hidden="true"></span><b>${esc(p.full_name || p.email)}</b>${p.role === "admin" ? '<span class="chip">Administrator</span>' : ""}${p.active ? "" : '<span class="chip bad">No access</span>'}</header>
+      <div class="seen ${now ? "live" : ""}">${esc(agoText(p.last_seen))}</div>
+      <dl class="nums">
+        <div><dt>Changes today</dt><dd>${p.actions_today}</dd></div>
+        <div><dt>Changes ${esc(period.replace("in the ", ""))}</dt><dd>${p.actions}</dd></div>
+        <div><dt>Bids worked on</dt><dd>${p.bids}</dd></div>
+        <div><dt>Bids opened</dt><dd>${p.views}</dd></div>
+      </dl>
+      <div class="last">${p.last_action ? `Last change: ${esc(p.last_action.detail)} <span class="muted">· ${esc(fmtDate(p.last_action.at, true))}</span>` : '<span class="muted">No changes yet</span>'}</div>
+    </button>`;
+  }).join("") || '<div class="empty">No one on the team yet.</div>';
+  $$("[data-actuser]").forEach(b => b.onclick = () => { act.user = act.user === b.dataset.actuser ? "" : b.dataset.actuser; safe(() => loadActivity()); });
+
+  const F = $("#actFeed");
+  $("#actCount").textContent = act.total ? `${act.total.toLocaleString("en-ZA")} entr${act.total === 1 ? "y" : "ies"} ${period}` : "";
+  if (!act.rows.length) { F.innerHTML = `<div class="empty">Nothing recorded ${esc(period)} for these filters.</div>`; $("#actMore").hidden = true; return; }
+  let lastDay = "";
+  const today = fmtDay(new Date()), yest = fmtDay(new Date(Date.now() - 864e5));
+  F.innerHTML = `<div class="tablewrap"><table class="acttable"><thead><tr><th>Time</th><th>Who</th><th>What</th><th>Bid</th></tr></thead><tbody>${act.rows.map(r => {
+    const day = fmtDay(r.at);
+    const head = day !== lastDay ? `<tr class="dayrow"><td colspan="4">${esc(day === today ? "Today" : day === yest ? "Yesterday" : day)}</td></tr>` : "";
+    lastDay = day;
+    const [cls, label] = AREA[r.area] || ["", r.area];
+    return `${head}<tr><td class="mono">${esc(fmtTime(r.at))}</td><td>${esc(r.full_name || r.email || "Tender Desk")}</td>
+      <td><span class="chip ${cls}">${esc(label)}</span> ${esc(r.detail || "")}</td>
+      <td>${r.tender_id ? `<button class="linkbtn" type="button" data-actbid="${esc(r.tender_id)}">${esc(r.tender_no || r.tender_id)}</button><br><span class="muted">${esc(r.tender_desc || "")}</span>` : ""}</td></tr>`;
+  }).join("")}</tbody></table></div>`;
+  $$("[data-actbid]", F).forEach(b => b.onclick = () => openTender(b.dataset.actbid));
+  $("#actMore").hidden = act.rows.length >= act.total;
+}
+$("#actDays").addEventListener("change", e => { act.days = Number(e.target.value); safe(() => loadActivity()); });
+$("#actUser").addEventListener("change", e => { act.user = e.target.value; safe(() => loadActivity()); });
+$("#actArea").addEventListener("change", e => { act.area = e.target.value; safe(() => loadActivity()); });
+let actQTimer;
+$("#actQ").addEventListener("input", e => { clearTimeout(actQTimer); actQTimer = setTimeout(() => { act.q = e.target.value.trim(); safe(() => loadActivity()); }, 400); });
+$("#actMore").addEventListener("click", () => { act.offset = act.rows.length; safe(() => loadActivity(true)); });
+$("#actExport").addEventListener("click", () => safe(async () => {
+  const feed = await api("activity", actFilters({ limit: 2000, offset: 0 }));
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const fmtFull = d => new Intl.DateTimeFormat("en-ZA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(d));
+  const lines = [["Date and time (SAST)", "Person", "Email", "Type", "What", "Tender no", "Bid"].map(q).join(",")]
+    .concat((feed.rows || []).map(r => [fmtFull(r.at), r.full_name || "Tender Desk", r.email || "", (AREA[r.area] || ["", r.area])[1], r.detail || "", r.tender_no || "", r.tender_desc || ""].map(q).join(",")));
+  const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `Tender Desk activity ${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(`Exported ${(feed.rows || []).length} entries`);
+}));
+function activityTimer(on) {
+  clearInterval(act.timer);
+  if (on) act.timer = setInterval(() => { if (!$("#tab-activity").hidden && !document.hidden) loadActivity().catch(() => {}); }, 60000);
+}
+
 /* ---------- sign-in ---------- */
 function showLogin(msg) {
   $("#appView").hidden = true; $("#loginView").hidden = false;
@@ -1466,6 +1558,7 @@ async function startApp() {
   $("#loginView").hidden = true; $("#appView").hidden = false;
   $("#whoami").textContent = me.full_name || me.email;
   $("#teamTab").hidden = me.role !== "admin";
+  $("#activityTab").hidden = me.role !== "admin";
   if (me.must_change_password) askPassword(true);
   try { const g = localStorage.getItem("pg-maxgrade"); if (g) { st.maxGrade = g; $("#maxGrade").value = g; } } catch (_) {}
   renderWorkChips();
@@ -1475,8 +1568,8 @@ async function startApp() {
     loadWorkCounts();
     let tab = null; try { tab = localStorage.getItem("pg-tab"); } catch (_) {}
     const hash = (location.hash || "").replace("#", "");
-    if (["bids", "uploads", "library", "people", "profile", "rates", "scanner", "team"].includes(hash)) tab = hash;
-    if (tab && tab !== "bids" && !(tab === "team" && me.role !== "admin")) showTab(tab);
+    if (["bids", "uploads", "library", "people", "profile", "rates", "scanner", "team", "activity"].includes(hash)) tab = hash;
+    if (tab && tab !== "bids" && !(["team", "activity"].includes(tab) && me.role !== "admin")) showTab(tab);
   });
 }
 

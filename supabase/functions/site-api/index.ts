@@ -177,15 +177,31 @@ Deno.serve(async (req: Request) => {
     caller = s;
   }
   const needAdmin = () => { if (!internal && caller?.role !== "admin") throw new UserError("Only administrators can do this."); };
+  // activity log for administrators (never stores passwords)
+  const log = async (action: string, area: string, detail: string, tenderId: string | null = null) => {
+    try {
+      await admin.from("activity_log").insert({
+        user_id: caller?.user_id ?? null, email: caller?.email ?? null, full_name: caller ? (caller.full_name || caller.email) : "Tender Desk",
+        action, area, tender_id: tenderId, detail: detail.slice(0, 500),
+      });
+    } catch (_) { /* logging never blocks the action */ }
+  };
+  const staffName = async (userId: string) => {
+    const { data } = await admin.from("staff").select("full_name, email").eq("user_id", userId).maybeSingle();
+    return data ? (data.full_name || data.email) : "a team member";
+  };
 
   try {
     switch (op) {
       case "bootstrap":
         if (!internal) return json({ error: "forbidden" }, 403);
         return json(await addUser(admin, body.email, body.full_name || "", "admin"));
-      case "team_add":
+      case "team_add": {
         needAdmin();
-        return json(await addUser(admin, body.email, body.full_name || "", body.role || "member"));
+        const r = await addUser(admin, body.email, body.full_name || "", body.role || "member");
+        await log("team_add", "team", `Added ${body.full_name || r.email} (${r.email}) to the team as ${body.role === "admin" ? "an administrator" : "a member"}`);
+        return json(r);
+      }
       case "team_reset": {
         needAdmin();
         const password = tempPassword();
@@ -193,6 +209,7 @@ Deno.serve(async (req: Request) => {
         if (error) throw error;
         await admin.from("staff").update({ must_change_password: true }).eq("user_id", body.user_id);
         const { data: s } = await admin.from("staff").select("email").eq("user_id", body.user_id).single();
+        await log("team_reset", "team", `Gave ${await staffName(String(body.user_id))} a new temporary password`);
         return json({ ok: true, email: s?.email, temp_password: password });
       }
       case "team_set": {
@@ -209,10 +226,17 @@ Deno.serve(async (req: Request) => {
         if (typeof body.active === "boolean") {
           await admin.auth.admin.updateUserById(String(body.user_id), { ban_duration: body.active ? "none" : "876000h" });
         }
+        const who = await staffName(String(body.user_id));
+        if (typeof body.active === "boolean") await log("team_set", "team", body.active ? `Restored access for ${who}` : `Removed access for ${who}`);
+        if (body.role) await log("team_set", "team", `Made ${who} ${body.role === "admin" ? "an administrator" : "a member"}`);
         return json({ ok: true });
       }
-      case "fetch_tender_docs":
-        return json(await fetchTenderDocs(admin, String(body.tender_id), caller?.full_name || caller?.email || "Tender Desk"));
+      case "fetch_tender_docs": {
+        const r = await fetchTenderDocs(admin, String(body.tender_id), caller?.full_name || caller?.email || "Tender Desk");
+        const saved = (r.results || []).filter((x: any) => x.status === "saved").length;
+        if (saved) await log("fetch_tender_docs", caller ? "bids" : "auto", `Copied ${saved} document${saved === 1 ? "" : "s"} from eTenders`, String(body.tender_id));
+        return json(r);
+      }
       case "extract": {
         const { data: f, error } = await admin.from("bid_files").select("*").eq("id", body.file_id).single();
         if (error || !f?.storage_path) throw new UserError("File not found.");

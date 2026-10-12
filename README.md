@@ -18,4 +18,7 @@ province and municipality, what each bid needs, the document library, key person
   hands it to the builder. Its instructions are in `builder/PREPARER_PROMPT.md`.
 - **Uploads needed:** a tab that lists, for each bid, every document still to upload with what it must show, its date
   limit and an upload button, followed by everything to sign, certify and deliver by hand.
+- **Activity (administrators):** who is active now and what each person did (uploads, status changes, requests to
+  Tender Desk, library, people, costs and team changes, bids opened), filterable and exportable to CSV. Recorded by the
+  database API and the `site-api` function; passwords are never recorded.
 - **Tender scanning, screening and email alerts** run in Supabase and in scheduled Tender Desk tasks.
