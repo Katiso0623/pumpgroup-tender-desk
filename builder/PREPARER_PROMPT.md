@@ -33,7 +33,7 @@ STEP 3: WRITE THE PLAN (a JSON object; leave out any key you cannot determine fr
 - "certified_within_days": the limit for certified copies (for example 90 for "not older than 3 months").
 - "tender": {"closes_at": "2026-11-03T11:00:00+02:00", "delivery": "<address or box>"} only where the document corrects or adds to the advert.
 - "envelopes": ["Envelope 1: ...", "Envelope 2: ..."] when the document prescribes the packaging (two-envelope system, original and copies).
-- "returnables": the tender's own list of returnable documents and schedules, in the tender's order, using the tender's numbering in "ref" and its wording in "title". Each entry has exactly one of:
+- "returnables": the tender's own list of returnable documents and schedules, in the tender's order, using the tender's numbering in "ref" and its wording in "title" (every entry needs a "title"). Each entry also has exactly one of:
     "kind": "tender_document"            the tender document itself (printed and completed in pen). Include exactly one, normally first.
     "kind": "form"                        a form or schedule inside the tender document that is completed and signed there (SBD / MBD forms, declarations, Form of Offer and Acceptance, record of addenda, compulsory enterprise questionnaire, pricing schedules).
     "generate": "authority_letter"        resolution of the board / letter of authority to sign.
