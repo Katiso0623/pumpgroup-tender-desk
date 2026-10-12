@@ -433,6 +433,8 @@ def main():
     n = 0
     for w in wanted:
         title = (w.get("title") or "").strip()
+        if not title and w.get("note"):  # a hand-attached item described only by its note
+            title = re.split(r"[:(]", str(w["note"]))[0].strip()[:90]
         if not title:
             continue
         kind, gen_kind = w.get("kind"), w.get("generate")

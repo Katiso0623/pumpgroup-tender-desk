@@ -43,7 +43,7 @@ STEP 3: WRITE THE PLAN (a JSON object; leave out any key you cannot determine fr
     "generate": "programme"               construction programme (also write "programme" below).
     "generate": "functionality_schedule"  cross-reference of each scored criterion to its evidence; include whenever functionality is scored.
     "categories": ["<key>", ...]          a document from the library. Keys: cipc, shareholding, director_ids, csd, tax, bbbee, cidb, coida, uif, municipal_account, proof_of_address, bank_letter, financials, surety, insurance, appointment_letter, completion_certificate, reference_letter, cv, qualification, plant, health_safety, quality, company_profile, jv, other.
-    "kind": "manual", "note": "<exactly what to attach>"   anything only staff can provide for this bid: briefing or site inspection certificate, third-party letters, JV agreement, guarantees not in the library.
+    "kind": "manual", "note": "<exactly what to attach>"   (with its "title" like every entry) anything only staff can provide for this bid: briefing or site inspection certificate, third-party letters, JV agreement, guarantees not in the library.
 - "functionality": one entry per scored criterion, exactly as the tender scores it:
     {"criterion": "<name as in the tender>", "max_points": 20, "kind": "personnel" | "company_experience" | "plant" | "methodology" | "programme" | "financial" | "quality" | "other",
      "requirement": "<the requirement as written>", "scoring": [{"points": 20, "rule": "<as written>"}, ...]}
