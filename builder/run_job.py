@@ -142,19 +142,35 @@ def run_build(job: dict, data: dict, tender_files: list, library_files: list):
                     break
             uploads.append({"local": p, "name": p.name, "kind": kind, "title": title, "size": p.stat().st_size,
                             "content_type": CTYPES[p.suffix.lower()]})
-        urls = call("upload_urls", job_id=job["id"], names=[u["name"] for u in uploads])["urls"]
+        # each prepared document (CVs, appointment letters, resolution, schedules, method statement, programme)
+        # is also uploaded on its own, so the website can show it; these are not added to the bid's file list
+        generated, extra = [], []
+        for i, g in enumerate(summary.get("generated") or []):
+            item = {"kind": g.get("kind"), "title": g.get("title")}
+            for key in ("pdf", "docx"):
+                p = Path(g.get(key) or "")
+                if g.get(key) and p.is_file() and p.suffix.lower() in CTYPES:
+                    name = f"Prepared {i + 1:02d} - {p.stem[:90]}{p.suffix.lower()}"
+                    extra.append({"local": p, "name": name, "content_type": CTYPES[p.suffix.lower()], "slot": (len(generated), key)})
+            generated.append(item)
+        urls = call("upload_urls", job_id=job["id"], names=[u["name"] for u in uploads + extra])["urls"]
         by_name = {u["name"]: u for u in urls}
         outputs = []
         for u in uploads:
             target = by_name[u["name"]]
             put(target["url"], u["local"], u["content_type"])
             outputs.append({k: u[k] for k in ("name", "kind", "title", "size", "content_type")} | {"path": target["path"]})
+        for u in extra:
+            target = by_name[u["name"]]
+            put(target["url"], u["local"], u["content_type"])
+            idx, key = u["slot"]
+            generated[idx][key] = target["path"]
         keep = ("tender_no", "built", "fill", "boq", "escalation", "cost_model", "cost_model_recalc", "index", "requirements", "db_requirements",
-                "functionality", "team", "attention", "review", "problems", "generated")
+                "functionality", "team", "attention", "review", "problems", "checklist", "section_notes")
         slim = {k: summary.get(k) for k in keep}
-        slim["generated"] = [{"kind": g.get("kind"), "title": g.get("title")} for g in summary.get("generated") or []]
+        slim["generated"] = generated
         call("complete", job_id=job["id"], summary=slim, outputs=outputs)
-        print(f"build job done ({len(outputs)} files)")
+        print(f"build job done ({len(outputs)} files, {len(extra)} prepared documents)")
 
 
 def main():

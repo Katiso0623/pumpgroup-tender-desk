@@ -613,7 +613,7 @@ def main():
     attention = [x for x in attention if not (x in seen or seen.add(x))]
     review = [x for x in review if not (x in seen or seen.add(x))]
     checklist = out / f"{tno} - 7 Submission checklist.pdf"
-    pack.checklist_pdf(str(checklist), T, prof, [
+    check_sections = [
         ("Upload or replace (on the Tender Desk, then rebuild)", attention[:40]),
         ("Check before you rely on it", review[:25]),
         ("Sign before you seal", sign),
@@ -623,8 +623,12 @@ def main():
         ("Pricing", price_lines),
         ("Also do", plan.get("checklist") or []),
         ("Delivery", deliver),
-    ])
+    ]
+    pack.checklist_pdf(str(checklist), T, prof, check_sections)
     summary["outputs"].append({"kind": "out_checklist", "path": str(checklist)})
+    # the same checklist for the Tender Desk's "Uploads needed" page
+    summary["checklist"] = [{"key": k, "heading": h, "items": list(items)} for k, (h, items) in
+                            zip(("upload", "check", "sign", "certify", "functionality", "details", "pricing", "also", "delivery"), check_sections) if items]
     summary["functionality"] = [{k: r.get(k) for k in ("criterion", "max_points", "est_points", "person", "gaps")} for r in func]
     # ready for: select public.set_requirements('<tender id>', '<db_requirements json>'::jsonb)
     gen_cats = {"authority_letter": ["authority_letter"], "methodology": ["methodology"], "programme": ["programme"],

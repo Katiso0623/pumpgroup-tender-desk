@@ -308,6 +308,94 @@ dialog.modal h3 { margin: 0; font-family: var(--display); font-size: 22px; lette
   #whoami { display: none; }
 }
 
+/* Bid steps */
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; list-style: none; margin: 14px 0 4px; padding: 0; }
+.flow li { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 7px 10px 8px; display: grid; gap: 1px; min-width: 0; }
+.flow li span { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+.flow li b { font-family: var(--display); font-weight: 600; font-size: 15.5px; letter-spacing: .03em; text-transform: uppercase; line-height: 1.15; }
+.flow li.done { border-color: var(--ok); }
+.flow li.done span { color: var(--ok); }
+.flow li.now { border-color: var(--hazard); box-shadow: inset 0 3px 0 var(--hazard); }
+.flow li.todo b { color: var(--ink-3); }
+@media (max-width: 640px) { .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.step h3 { display: flex; align-items: center; gap: 10px; }
+.step h3 .n { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--wash); color: var(--ink-2); font-family: var(--body); font-size: 13px; font-weight: 700; letter-spacing: 0; flex: none; }
+.step.now { border-color: var(--hazard); }
+.step.now h3 .n { background: var(--hazard); color: var(--hazard-ink); }
+.step.done h3 .n { background: var(--ok); color: #ffffff; }
+.step.todo { opacity: .92; }
+.statusline { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--r); background: var(--wash); margin: 4px 0 8px; font-size: 14px; }
+.statusline.info { background: var(--info-bg); color: var(--ink); }
+.statusline.warn { background: var(--warn-bg); color: var(--ink); }
+.statusline.ok { background: var(--ok-bg); color: var(--ink); }
+.statusline.bad { background: var(--bad-bg); color: var(--ink); }
+.spin { width: 15px; height: 15px; border: 2px solid var(--info); border-right-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; flex: none; margin-top: 3px; }
+.spin.slow { animation-duration: 2.6s; border-color: var(--ink-3); border-right-color: transparent; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ticklist { margin: 0 0 4px; padding-left: 20px; display: grid; gap: 3px; font-size: 14px; color: var(--ink-2); }
+.message { white-space: pre-wrap; background: var(--wash); border-left: 3px solid var(--hazard); padding: 10px 12px; border-radius: 0 var(--r) var(--r) 0; font-size: 14px; margin: 8px 0; overflow-wrap: anywhere; }
+h4.sub { margin: 14px 0 6px; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+.plainlist { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.plainlist.flagged li::marker { color: var(--bad); }
+b.big { font-family: var(--display); font-size: 24px; }
+details.more { margin-top: 10px; }
+details.more > summary, details.more-box > summary { cursor: pointer; color: var(--link); font-size: 14px; }
+details.more-box > summary { color: var(--ink); }
+.needlist { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 5px; font-size: 14px; }
+.needlist li { display: flex; gap: 8px; align-items: baseline; }
+.outlist { list-style: none; margin: 0; padding: 0; }
+.outlist > li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.outlist > li:last-child { border-bottom: 0; }
+.outlist .no { font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1; color: var(--hazard); grid-row: span 2; }
+.outlist .what { font-weight: 700; }
+.outlist .why { font-size: 13.5px; color: var(--ink-2); }
+.outlist .choices { grid-column: 2; display: grid; gap: 4px; margin-top: 4px; }
+.fchoice { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 13.5px; }
+.fchoice .fname { overflow-wrap: anywhere; color: var(--ink-2); flex: 1 1 200px; min-width: 0; }
+
+/* Uploads needed */
+.upbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 14px; }
+.upbar .field { flex: 1 1 420px; min-width: 0; }
+.upbar select { width: 100%; }
+.upcard { background: var(--sheet); border: 1px solid var(--line); border-top: 4px solid var(--hazard); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; }
+.upcard h3 { margin: 2px 0 4px; font-size: 19px; line-height: 1.3; overflow-wrap: anywhere; }
+.upcard .facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 860px) { .upcard .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .upcard .facts { grid-template-columns: minmax(0, 1fr); } }
+.upcard .readiness { margin: 4px 0 0; }
+.upsec { margin: 22px 0 0; }
+.upsec > h3 { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px; }
+.upsec > h3 .count { display: inline-block; vertical-align: 2px; margin-left: 6px; font-family: var(--mono); font-size: 13px; background: var(--wash); border-radius: 999px; padding: 0 8px; color: var(--ink-2); letter-spacing: 0; }
+.upsec > p.muted { margin: 0 0 10px; }
+.uplist { display: grid; gap: 10px; }
+.upitem { background: var(--sheet); border: 1px solid var(--line); border-left: 5px solid var(--bad); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+.upitem.expired { border-left-color: var(--warn); }
+.upitem.manual { border-left-color: var(--info); }
+.upitem header { display: flex; gap: 10px; justify-content: space-between; align-items: baseline; flex-wrap: wrap; }
+.upitem h4 { margin: 0; font-size: 16px; line-height: 1.35; overflow-wrap: anywhere; min-width: 0; flex: 1 1 260px; }
+.upitem h4 .n { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); margin-right: 8px; }
+.upitem dl { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: 14px; }
+.upitem dt { color: var(--ink-3); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+.upitem dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .upitem dl { grid-template-columns: minmax(0, 1fr); } .upitem dd { margin-bottom: 4px; } }
+.upform { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px 10px; background: var(--wash); border-radius: var(--r); padding: 10px; }
+.upform input[type="text"], .upform input[type="date"], .upform select { width: 100%; }
+.ticks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ticks label { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.ticks input { margin-top: 3px; flex: none; width: 16px; height: 16px; }
+.ticks input:checked + span { color: var(--ink-3); text-decoration: line-through; }
+.tabs .count.bad:not(:empty) { background: var(--bad); color: #ffffff; border-radius: 999px; padding: 0 7px; }
+
+@media print {
+  .bar, .tabs, .upbar, .no-print, .toast, #notice, .lede, .upform, .sheet, .scrim, button:not(.linkbtn) { display: none !important; }
+  .linkbtn { color: inherit; text-decoration: none; font-size: inherit; }
+  body { background: #ffffff; color: #000000; font-size: 12px; }
+  main { padding: 0; }
+  .upcard, .upitem { break-inside: avoid; box-shadow: none; }
+  details.more-box { display: none; }
+  .ticks input { display: inline-block !important; }
+}
+
 </style>
 </head>
 <body>
@@ -335,6 +423,7 @@ dialog.modal h3 { margin: 0; font-family: var(--display); font-size: 22px; lette
 <nav class="tabs" aria-label="Sections">
   <div class="wrap" role="tablist">
     <button role="tab" data-tab="bids" aria-selected="true">Bids<span class="count" id="cBids"></span></button>
+    <button role="tab" data-tab="uploads" aria-selected="false">Uploads needed<span class="count bad" id="cUp"></span></button>
     <button role="tab" data-tab="library" aria-selected="false">Document library<span class="count" id="cLib"></span></button>
     <button role="tab" data-tab="people" aria-selected="false">People<span class="count" id="cPeople"></span></button>
     <button role="tab" data-tab="profile" aria-selected="false">Company details<span class="count" id="cProf"></span></button>
@@ -384,6 +473,14 @@ dialog.modal h3 { margin: 0; font-family: var(--display); font-size: 22px; lette
     <p class="resultline" id="resultline"></p>
     <div class="list" id="list"><div class="loading">Loading bids…</div></div>
     <div class="more"><button class="btn ghost" type="button" id="moreBtn" hidden>Show more</button></div>
+  </section>
+
+  <!-- UPLOADS NEEDED -->
+  <section id="tab-uploads" data-panel="uploads" hidden>
+    <h2 class="section">Uploads needed</h2>
+    <p class="lede">Choose a bid to see everything Pump Group still has to upload for it: what each document must show, where to get it and its date limit, with an upload button for each. Then the list of what to do by hand at the end. Uploads are saved to the document library, so the next bid has them too.</p>
+    <div class="upbar"><label class="field"><span>Bid</span><select id="upBid" aria-label="Bid"></select></label></div>
+    <div id="upBody"><div class="loading">Loading bids…</div></div>
   </section>
 
   <!-- LIBRARY -->
