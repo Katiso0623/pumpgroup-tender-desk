@@ -549,12 +549,12 @@ function renderSheet() {
       ? `<span class="spin" aria-hidden="true"></span><div><b>Tender Desk is working on this bid now.</b><br>${esc(prep.progress || "Reading the tender documents")}</div>`
       : prep.status === "waiting"
         ? `<span class="spin slow" aria-hidden="true"></span><div><b>On hold.</b> ${esc(prep.progress || "")}</div>`
-        : `<span class="spin slow" aria-hidden="true"></span><div><b>Sent to Tender Desk</b> by ${who}, ${esc(fmtDate(prep.created_at, true))}.<br>Tender Desk checks for new requests ${PREP_TIMES}. Next check: <b>${esc(whenText(next))}</b>. The bid pack follows 10 to 20 minutes after Tender Desk finishes. This page updates by itself.</div>`;
+        : `<span class="spin slow" aria-hidden="true"></span><div><b>Sent to Tender Desk</b> by ${who}, ${esc(fmtDate(prep.created_at, true))}.<br>Tender Desk checks for new requests ${PREP_TIMES}. Next check: <b>${esc(whenText(next))}</b>. The bid pack follows within about half an hour of Tender Desk finishing. This page updates by itself.</div>`;
     s2 = `<div class="statusline ${prep.status === "waiting" ? "warn" : "info"}">${line}</div>
       ${prep.note ? `<p class="muted" style="margin:6px 0 0">Your instructions: ${esc(prep.note)}</p>` : ""}
       ${prep.status !== "running" ? `<details class="more"><summary>Change the instructions, or cancel</summary>${noteBox(prep.note)}<div class="actions"><button class="btn small" type="button" id="prepBtn">Save the instructions</button><button class="btn ghost small" type="button" id="prepCancel">Cancel the request</button></div></details>` : ""}`;
   } else if (buildActive) {
-    s2 = `<div class="statusline info"><span class="spin" aria-hidden="true"></span><div><b>${build.status === "running" ? "Building the bid pack now." : "Tender Desk has prepared the bid. The bid pack is being built."}</b><br>This usually takes 10 to 20 minutes. This page updates by itself.</div></div>${message}${questions}`;
+    s2 = `<div class="statusline info"><span class="spin" aria-hidden="true"></span><div><b>${build.status === "running" ? "Building the bid pack now." : "Tender Desk has prepared the bid. The bid pack is being built."}</b><br>This usually takes 10 to 30 minutes. This page updates by itself.</div></div>${message}${questions}`;
   } else if (prep && prep.status === "failed") {
     s2 = `<div class="statusline bad"><div><b>Tender Desk could not prepare this bid.</b><br>${esc(prep.error || "")}</div></div>
       ${noteBox(prep.note)}<div class="actions"><button class="btn" type="button" id="prepBtn" ${!docsHere.length && !docs.length ? "disabled" : ""} ${!docsHere.length && docs.length ? 'data-fetch="1"' : ""}>Try again</button></div>`;
@@ -693,7 +693,7 @@ function renderSheet() {
   const goUploads = () => { closeSheet(); showUploads(t.id); };
   if ($("#toUploads")) $("#toUploads").onclick = goUploads;
   if ($("#toUploads2")) $("#toUploads2").onclick = goUploads;
-  if ($("#rebuild")) $("#rebuild").onclick = () => safe(async () => { await api("queue_job", { tender_id: t.id, kind: "build" }); toast("Build queued. It usually starts within 10 minutes."); await openTender(t.id, true); });
+  if ($("#rebuild")) $("#rebuild").onclick = () => safe(async () => { await api("queue_job", { tender_id: t.id, kind: "build" }); toast("Build queued. The new pack is usually ready within half an hour."); await openTender(t.id, true); });
   wireFileButtons($("#sheet"), () => openTender(t.id, true));
   wireOpen($("#sheet"));
 }
@@ -938,7 +938,7 @@ async function renderUploads(id) {
 
   $("#upOpen").onclick = () => openTender(t.id);
   $("#upPrint").onclick = () => window.print();
-  if ($("#upRebuild")) $("#upRebuild").onclick = () => safe(async () => { await api("queue_job", { tender_id: t.id, kind: "build" }); toast("Build queued. It usually starts within 10 minutes."); await renderUploads(id); });
+  if ($("#upRebuild")) $("#upRebuild").onclick = () => safe(async () => { await api("queue_job", { tender_id: t.id, kind: "build" }); toast("Build queued. The new pack is usually ready within half an hour."); await renderUploads(id); });
   $$("[data-upform]", B).forEach(b => b.onclick = () => {
     const card = b.closest(".upitem");
     const open = $("form", card); if (open) { open.remove(); return; }
