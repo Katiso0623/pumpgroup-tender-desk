@@ -4,7 +4,7 @@
 python make_pack.py --data bid_data.json --plan plan.json --assets assets/ --docs "Tender.docx" ["BoQ.pdf" ...] --out out/
 
 bid_data.json   select public.bid_pack_data('<tender id>')
-plan.json       written by the Tender Desk after reading the tender document (see PLAN below)
+plan.json       written by the preparation step after reading the tender document (see PLAN below)
 assets/         library files fetched from the Tender Desk, each named <asset_id>.<ext>
 
 PLAN (every key optional):
@@ -131,7 +131,7 @@ def doc_text(path: Path) -> str:
 
 def pick_team(specs: list[dict], people: list[dict], auto: bool = True) -> list[dict]:
     """Assign one person per role: the named person if given, else (when auto) the best match not already proposed.
-    A plan's own personnel list is the Tender Desk's decision: a position without a person stays open."""
+    A plan's own personnel list is the preparation step's decision: a position without a person stays open."""
     used, team = set(), []
     for s in specs:
         if not s.get("person") and not auto:
@@ -390,14 +390,14 @@ def main():
                 res = writeups.method_statement(T, prof, plan["methodology"], gfile("Method statement"))
                 sign.append("Method statement: read it against the scope, edit the Word file if needed, then sign.")
             else:
-                attention.append("Method statement: not drafted yet. Ask the Tender Desk to draft it from the scope of works.")
+                attention.append("Method statement: not drafted yet. Press Prepare again on the Tender Desk with an instruction to draft it from the scope of works.")
         elif kind == "programme":
             if plan.get("programme"):
                 pdf = str(out / "_work" / "Programme.pdf")
                 res = writeups.programme_pdf(T, prof, plan["programme"], pdf)
                 res["docx"] = None
             else:
-                attention.append("Programme: not drafted yet. Ask the Tender Desk to draft it from the scope and contract period.")
+                attention.append("Programme: not drafted yet. Press Prepare again on the Tender Desk with an instruction to draft it from the scope and contract period.")
         elif kind == "personnel_schedule":
             res = writeups.personnel_schedule(T, prof, team, gfile("Schedule of key personnel"))
             sign.append("Schedule of key personnel: signed.")
@@ -476,7 +476,7 @@ def main():
                                                    "Nobody on Pump Group's record meets this position's requirement yet.",
                                                    [f"The tender asks for: {m.get('requirement') or 'see the tender document'}",
                                                     "Add the person under People (career history, qualifications, registration) and upload their certified "
-                                                    "qualifications. On the next build Tender Desk writes their CV for this position and their appointment letter."]))
+                                                    "qualifications. The next build writes their CV for this position and their appointment letter."]))
                         continue
                     if gen_kind in ("personnel", "personnel_cvs") and m["cv"] and m["cv"].get("pdf"):
                         sec["files"].append(lh(m["cv"]["pdf"]))

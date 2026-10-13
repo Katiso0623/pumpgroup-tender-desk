@@ -4,7 +4,7 @@
 Claims waiting jobs from the pack-runner service (authenticated with this workflow's GitHub OIDC
 token, so no secrets live in this public repository), then:
   extract  reads the text of an uploaded tender document (pdftotext, or OCR for scans)
-  build    runs make_pack.py with the Tender Desk's plan and the bid's documents, and uploads the outputs
+  build    runs make_pack.py with the bid's plan and documents, and uploads the outputs
 
 This repository and its workflow logs are public: never print bid data, names or file contents.
 """

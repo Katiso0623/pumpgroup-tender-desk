@@ -1,5 +1,5 @@
 // Pump Group Tender Desk website: server-side actions that need the service role.
-// Auth: a signed-in staff member (Supabase Auth JWT) or the internal scanner token (pg_net / Tender Desk).
+// Auth: a signed-in staff member (Supabase Auth JWT) or the internal scanner token (pg_net / scheduled tasks).
 //   team_add, team_reset, team_set      administrators: manage who can sign in
 //   bootstrap                           internal: create the first administrator
 //   fetch_tender_docs                   staff: copy a tender's documents from eTenders into the bid's files
@@ -232,7 +232,7 @@ Deno.serve(async (req: Request) => {
         return json({ ok: true });
       }
       case "fetch_tender_docs": {
-        const r = await fetchTenderDocs(admin, String(body.tender_id), caller?.full_name || caller?.email || "Tender Desk");
+        const r = await fetchTenderDocs(admin, String(body.tender_id), caller?.full_name || caller?.email || "the Tender Desk");
         const saved = (r.results || []).filter((x: any) => x.status === "saved").length;
         if (saved) await log("fetch_tender_docs", caller ? "bids" : "auto", `Copied ${saved} document${saved === 1 ? "" : "s"} from eTenders`, String(body.tender_id));
         return json(r);

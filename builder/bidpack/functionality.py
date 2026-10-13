@@ -1,7 +1,7 @@
 """Functionality: match each evaluation criterion to Pump Group's evidence, estimate the
 score, and list what is missing.
 
-plan["functionality"] is written by the Tender Desk after reading the tender's evaluation
+plan["functionality"] is written by the preparation step after reading the tender's evaluation
 criteria, one entry per criterion:
   {"criterion": "Key personnel: Contracts Manager", "max_points": 15, "kind": "personnel",
    "role": "Contracts Manager", "requirement": "BTech/BSc Civil, ECSA Pr Tech Eng, 10 years on water pipelines",

@@ -562,7 +562,7 @@ details.more-box > summary { color: var(--ink); }
   <!-- PEOPLE -->
   <section id="tab-people" data-panel="people" hidden>
     <h2 class="section">Key personnel</h2>
-    <p class="lede">Tender Desk picks the best person for each position a tender scores, tailors their CV to that tender's requirement, and drafts an appointment letter on the letterhead for signing. Keep each person's qualifications, registrations and projects current here. Upload certified copies under each person.</p>
+    <p class="lede">For each bid, the Tender Desk picks the best person for each position the tender scores, tailors their CV to that tender's requirement, and drafts an appointment letter on the letterhead for signing. Keep each person's qualifications, registrations and projects current here. Upload certified copies under each person.</p>
     <div class="actions" style="margin:0 0 14px"><button class="btn" type="button" id="addPerson">Add a person</button><span class="muted">ID numbers are kept on file for CVs but never shown on this page.</span></div>
     <form class="formcard" id="personForm" hidden></form>
     <div class="people" id="peopleList"><div class="loading">Loading people…</div></div>
@@ -666,7 +666,7 @@ details.more-box > summary { color: var(--ink); }
   <!-- SCANNER -->
   <section id="tab-scanner" data-panel="scanner" hidden>
     <h2 class="section">Scanner</h2>
-    <p class="lede">Every hour at seven minutes past, the scanner reads every open advert on the National Treasury eTenders portal (national and provincial departments, all municipalities, SOEs such as Eskom, Transnet and SANRAL), stores new ones, notices closing-date changes and addenda, and sorts each advert by CIDB grading. Adverts that do not state a grading but look like civil or mechanical works are checked against their documents by the Tender Desk three times a day, and you get an email summary.</p>
+    <p class="lede">Every hour at seven minutes past, the scanner reads every open advert on the National Treasury eTenders portal (national and provincial departments, all municipalities, SOEs such as Eskom, Transnet and SANRAL), stores new ones, notices closing-date changes and addenda, and sorts each advert by CIDB grading. Adverts that do not state a grading but look like civil or mechanical works are checked against their documents three times a day, and you get an email summary.</p>
     <form class="formcard" id="matchForm">
       <h3>What counts as a match</h3>
       <div class="grid3">
@@ -677,7 +677,7 @@ details.more-box > summary { color: var(--ink); }
         <label class="field"><span>Lowest grade</span><select id="mMin"></select></label>
         <label class="field"><span>Highest grade</span><select id="mMax"></select></label>
       </div>
-      <p class="muted">PE (potentially emerging) designations such as 5CE PE are included. Quotations and panels count as matches. Saving re-sorts adverts that Tender Desk has not yet checked.</p>
+      <p class="muted">PE (potentially emerging) designations such as 5CE PE are included. Quotations and panels count as matches. Saving re-sorts adverts whose documents have not been checked yet.</p>
       <div class="actions"><button class="btn" type="submit">Save and re-sort</button><span class="muted" id="matchMsg"></span></div>
     </form>
     <div class="tablewrap"><table><thead><tr><th>Scan started</th><th class="num">Adverts read</th><th class="num">New</th><th class="num">Changed</th><th class="num">New matches</th><th class="num">To check</th><th>Result</th></tr></thead><tbody id="runRows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody></table></div>
@@ -700,14 +700,14 @@ details.more-box > summary { color: var(--ink); }
   <!-- ACTIVITY (administrators) -->
   <section id="tab-activity" data-panel="activity" hidden>
     <h2 class="section">Activity</h2>
-    <p class="lede">Who is on the Tender Desk and what each person has done: uploads, status changes, requests to Tender Desk, library, people, costs and team changes, and which bids they opened. Only administrators see this page. It refreshes every minute.</p>
+    <p class="lede">Who is on the Tender Desk and what each person has done: uploads, status changes, preparation requests, library, people, costs and team changes, and which bids they opened. Only administrators see this page. It refreshes every minute.</p>
     <div class="actfilters">
       <label class="field"><span>Period</span><select id="actDays"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
       <label class="field"><span>Person</span><select id="actUser"><option value="">Everyone</option></select></label>
       <label class="field"><span>Show</span><select id="actArea">
         <option value="changes" selected>All changes</option><option value="bids">Bids</option><option value="uploads">Uploads needed</option><option value="library">Document library</option>
         <option value="people">People</option><option value="company">Company details</option><option value="costs">Costs and rates</option><option value="scanner">Scanner</option>
-        <option value="team">Team</option><option value="auto">Tender Desk and the bid pack builder</option><option value="view">Bids opened</option><option value="signin">Sign-ins</option><option value="all">Everything</option></select></label>
+        <option value="team">Team</option><option value="auto">Tender Desk (automatic preparation and builder)</option><option value="view">Bids opened</option><option value="signin">Sign-ins</option><option value="all">Everything</option></select></label>
       <label class="field grow"><span>Search</span><input type="search" id="actQ" placeholder="Tender no, works, person or what was done"></label>
       <div class="field"><span>&nbsp;</span><button class="btn ghost" type="button" id="actExport">Export to Excel (CSV)</button></div>
     </div>

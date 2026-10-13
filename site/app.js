@@ -20,7 +20,7 @@ const FILE_KIND = {
 const CORE_CATS = ["cipc","director_ids","csd","tax","bbbee","cidb","coida","municipal_account","bank_letter","appointment_letter","completion_certificate","reference_letter","cv","health_safety","letterhead"];
 const PERSON_CATS = ["cv", "qualification", "personnel_appointment"];
 const REQ_STATUS = {
-  ok: ["ok", "On file"], missing: ["bad", "Missing"], expired: ["warn", "Out of date"], to_generate: ["info", "Tender Desk prepares it"],
+  ok: ["ok", "On file"], missing: ["bad", "Missing"], expired: ["warn", "Out of date"], to_generate: ["info", "Prepared automatically"],
   in_document: ["", "In the tender document"], manual: ["warn", "Attach by hand"], na: ["", "Not needed"]
 };
 const ACTIVE = ["interested", "purchase", "purchased", "docs_uploaded", "preparing", "pack_ready"];
@@ -301,13 +301,13 @@ async function loadWorkCounts() {
   renderWorkChips();
 }
 
-/* ---------- Tender Desk preparing a bid ---------- */
+/* ---------- automatic bid preparation ---------- */
 const TENDER_KINDS = ["tender_doc", "purchased_scan", "addendum"];
 const PREP_TIMES = "every hour on weekdays from 07:00 to 18:00";
 const GEN_KIND = { cv: "CV", appointment: "Letter", authority_letter: "Letter", experience: "Schedule", personnel_schedule: "Schedule",
   methodology: "Method", programme: "Programme", functionality_schedule: "Schedule" };
 
-// The Tender Desk preparer runs at :54 past each hour, 06:54 to 17:54, Monday to Friday, South African time (UTC+2 all year).
+// The preparation check runs at :54 past each hour, 06:54 to 17:54, Monday to Friday, South African time (UTC+2 all year).
 function nextCheck(from = new Date()) {
   const off = 2 * 3600e3;
   const s = new Date(from.getTime() + off);
@@ -359,7 +359,7 @@ async function openTender(id, keep) {
     sh.innerHTML = `<div class="notice bad">${errorCopy(e)}</div><button class="btn ghost" type="button" id="closeSheet">Close</button>`; $("#closeSheet").onclick = closeSheet;
   }
 }
-// while Tender Desk or the builder is busy, look again every 45 seconds and redraw when something changed
+// while preparation or the builder is busy, look again every 45 seconds and redraw when something changed
 function schedulePoll(t) {
   clearTimeout(pollTimer);
   const w = t.work || {};
@@ -453,7 +453,7 @@ function openReqUpload(t, r, btn) {
 
 /* ---------- the bid sheet: four steps ---------- */
 const OUT_GROUPS = [
-  { title: "Returnables pack for printing", why: "Cover page, index, dividers and every returnable in the tender's order, page-numbered, with the CVs, letters and schedules Tender Desk prepared. Print it as it is.", match: f => f.kind === "out_returnables" },
+  { title: "Returnables pack for printing", why: "Cover page, index, dividers and every returnable in the tender's order, page-numbered, with the CVs, letters and schedules prepared for this bid. Print it as it is.", match: f => f.kind === "out_returnables" },
   { title: "Filling guide (red) and the blank original", why: "Print the blank original and complete it in pen, copying every red entry from the guide. It goes behind its divider in the returnables pack, where its pages are already counted.", match: f => f.kind === "out_filled" || f.kind === "out_blank" },
   { title: "Priced BoQ and cost model", why: "Every BoQ rate (column H) and the tender total, with the build-ups and escalation behind them. Copy the rates into the original in pen.", match: f => f.kind === "out_priced_boq" },
   { title: "Cover page", why: "Already inside the returnables pack. The Word file is there if you want to change it.", match: f => f.kind === "out_cover" && !/envelope/i.test((f.title || "") + (f.file_name || "")) },
@@ -485,7 +485,7 @@ function preparedList(pack) {
   if (!gen.length) return "";
   const withFiles = gen.filter(g => g.pdf || g.docx);
   const base = s => safeFile(s).replace(/\.+$/, "");
-  return `<h4 class="sub">Documents Tender Desk prepared for this bid</h4>
+  return `<h4 class="sub">Documents prepared for this bid</h4>
     <p class="muted" style="margin:0 0 6px">Each one is already in the returnables pack on the letterhead. Open one to read it; download the Word file to edit it.</p>
     <ul class="doclist">${gen.map(g => `<li><span class="nm"><span class="ext">${esc(GEN_KIND[g.kind] || "Doc")}</span>${esc(g.title)}</span>
       <span class="filebtns">${g.pdf ? `<button class="btn ghost small" type="button" data-open="${esc(g.pdf)}">Open</button>` : ""}${g.docx ? `<button class="btn ghost small" type="button" data-dl="${esc(g.docx)}" data-name="${esc(base(g.title))}.docx">Word</button>` : ""}
@@ -503,7 +503,7 @@ function teamAndScore(pack, prep) {
     const r = reasons[(m.role || "").toLowerCase()] || {};
     return `<tr><td>${esc(m.role || "")}</td><td>${m.person ? esc(m.person) : '<span class="chip bad">Nobody on record meets this</span>'}</td><td class="muted">${esc(r.reason || "")}</td></tr>`;
   }).join("")}</tbody></table></div>`;
-  if (fMax) html += `<h4 class="sub">Functionality (the Tender Desk's estimate)</h4><p style="margin:0 0 6px"><b class="big">${fEst.toLocaleString("en-ZA")} of ${fMax.toLocaleString("en-ZA")}</b> points</p>
+  if (fMax) html += `<h4 class="sub">Functionality (estimate)</h4><p style="margin:0 0 6px"><b class="big">${fEst.toLocaleString("en-ZA")} of ${fMax.toLocaleString("en-ZA")}</b> points</p>
     <ul class="plainlist">${func.map(f => `<li><b>${esc(f.criterion || "")}</b>: ${f.est_points != null ? esc(f.est_points) + " of " : ""}${esc(f.max_points ?? "–")}${f.person ? ` · ${esc(f.person)}` : ""}${(f.gaps || []).length ? `<br><span class="muted">${esc(f.gaps.slice(0, 2).join(" · "))}</span>` : ""}</li>`).join("")}</ul>`;
   return html;
 }
@@ -543,7 +543,7 @@ function renderSheet() {
   // step 1: documents
   let s1;
   if (docsHere.length) {
-    s1 = `<p style="margin:0 0 8px">${docsHere.length} tender document${docsHere.length === 1 ? " is" : "s are"} on this bid.${reading ? " The text of scanned pages is being read; this takes a few minutes." : " Tender Desk reads them when it prepares the bid."}</p>
+    s1 = `<p style="margin:0 0 8px">${docsHere.length} tender document${docsHere.length === 1 ? " is" : "s are"} on this bid.${reading ? " The text of scanned pages is being read; this takes a few minutes." : " They are read when the bid is prepared."}</p>
       <ul class="doclist">${inFiles.map(fileRow).join("")}</ul>
       <details class="more"><summary>Upload another document (addendum, briefing certificate, purchased scan)</summary>${uploadForm}</details>`;
   } else if (docs.length) {
@@ -553,7 +553,7 @@ function renderSheet() {
       <details class="more"><summary>Or upload them yourself</summary>${uploadForm}</details>`;
   } else if (t.purchase_required || t.bid_status === "purchase") {
     s1 = `<div class="box alert" style="margin:0 0 10px"><b>The documents must be bought.</b> ${t.purchase_fee ? "Fee: <b>" + esc(t.purchase_fee) + "</b>. " : ""}${esc(t.purchase_where || "See the advert for where to buy.")}
-        <ol class="steps" style="margin-top:6px"><li>Buy the set and keep the receipt for the bid.</li><li>Scan every page to one PDF (or upload the Word and Excel files if you were given them).</li><li>Upload it below as <b>Purchased document (scan)</b>. Tender Desk can then prepare the bid.</li></ol>
+        <ol class="steps" style="margin-top:6px"><li>Buy the set and keep the receipt for the bid.</li><li>Scan every page to one PDF (or upload the Word and Excel files if you were given them).</li><li>Upload it below as <b>Purchased document (scan)</b>. The bid can then be prepared.</li></ol>
         <div class="actions"><button class="btn warn small" type="button" data-setstatus="purchase">Mark: must buy</button><button class="btn ghost small" type="button" data-setstatus="purchased">Mark: bought</button></div></div>
       ${inFiles.length ? `<ul class="doclist">${inFiles.map(fileRow).join("")}</ul>` : ""}${uploadForm}`;
   } else {
@@ -562,57 +562,57 @@ function renderSheet() {
   }
   if (docs.length) s1 += `<details class="more"><summary>Documents on the eTenders advert (${docs.length})</summary><ul class="doclist">${docs.map(d => `<li><span class="nm"><span class="ext">${esc((d.ext || "").replace(".", ""))}</span>${esc(d.name)}</span><a href="${esc(d.url)}" target="_blank" rel="noopener">Download from eTenders</a></li>`).join("")}</ul></details>`;
 
-  // step 2: Tender Desk prepares
-  const noteBox = (val, label) => `<label class="field" style="margin-top:10px"><span>${label || "Anything Tender Desk should know (optional)"}</span><textarea id="prepNote" rows="3" placeholder="For example: propose Kabelo as contracts manager; we bid as a JV with another firm; leave out the Maselspoort project; the site meeting is on 21 Oct.">${esc(val || "")}</textarea></label>`;
+  // step 2: automatic preparation
+  const noteBox = (val, label) => `<label class="field" style="margin-top:10px"><span>${label || "Anything the preparation should take into account (optional)"}</span><textarea id="prepNote" rows="3" placeholder="For example: propose Kabelo as contracts manager; we bid as a JV with another firm; leave out the Maselspoort project; the site meeting is on 21 Oct.">${esc(val || "")}</textarea></label>`;
   const WHAT = `<ul class="ticklist">
       <li>Reads the returnables list, the functionality criteria, the pricing instructions and the contract data.</li>
       <li>Picks the best person for each key position and tailors their CV to that position's requirement.</li>
       <li>Drafts the appointment letters, the resolution, the schedules, the method statement and the programme on the letterhead.</li>
       <li>Fills the tender document in red for you to copy in pen, and prices the BoQ with the cost model.</li>
       <li>Builds the returnables pack, cover page, index, envelope labels and checklist, and lists every document still to upload.</li></ul>`;
-  const message = prep && prep.message ? `<div class="message"><b>the Tender Desk's notes for this bid</b>\n${esc(prep.message)}</div>` : "";
+  const message = prep && prep.message ? `<div class="message"><b>Preparation notes for this bid</b>\n${esc(prep.message)}</div>` : "";
   const qs = prep && prep.details ? [...(prep.details.questions || []), ...(prep.details.not_found || []).map(x => "Not found in the document: " + x)] : [];
   const questions = qs.length ? `<h4 class="sub">For you to decide or check</h4><ul class="plainlist">${qs.map(q => `<li>${esc(q)}</li>`).join("")}</ul>` : "";
   let s2;
   if (prepActive) {
     const who = esc(prep.requested_name || prep.requested_by || "the team");
     const line = prep.status === "running"
-      ? `<span class="spin" aria-hidden="true"></span><div><b>Tender Desk is working on this bid now.</b><br>${esc(prep.progress || "Reading the tender documents")}</div>`
+      ? `<span class="spin" aria-hidden="true"></span><div><b>Preparing this bid now.</b><br>${esc(prep.progress || "Reading the tender documents")}</div>`
       : prep.status === "waiting"
         ? `<span class="spin slow" aria-hidden="true"></span><div><b>On hold.</b> ${esc(prep.progress || "")}</div>`
-        : `<span class="spin slow" aria-hidden="true"></span><div><b>Sent to Tender Desk</b> by ${who}, ${esc(fmtDate(prep.created_at, true))}.<br>Tender Desk checks for new requests ${PREP_TIMES}. Next check: <b>${esc(whenText(next))}</b>. The bid pack follows within about half an hour of Tender Desk finishing. This page updates by itself.</div>`;
+        : `<span class="spin slow" aria-hidden="true"></span><div><b>Sent for preparation</b> by ${who}, ${esc(fmtDate(prep.created_at, true))}.<br>Requests are picked up ${PREP_TIMES}. Next check: <b>${esc(whenText(next))}</b>. The bid pack follows within about half an hour of preparation. This page updates by itself.</div>`;
     s2 = `<div class="statusline ${prep.status === "waiting" ? "warn" : "info"}">${line}</div>
       ${prep.note ? `<p class="muted" style="margin:6px 0 0">Your instructions: ${esc(prep.note)}</p>` : ""}
       ${prep.status !== "running" ? `<details class="more"><summary>Change the instructions, or cancel</summary>${noteBox(prep.note)}<div class="actions"><button class="btn small" type="button" id="prepBtn">Save the instructions</button><button class="btn ghost small" type="button" id="prepCancel">Cancel the request</button></div></details>` : ""}`;
   } else if (buildActive) {
-    s2 = `<div class="statusline info"><span class="spin" aria-hidden="true"></span><div><b>${build.status === "running" ? "Building the bid pack now." : "Tender Desk has prepared the bid. The bid pack is being built."}</b><br>This usually takes 10 to 30 minutes. This page updates by itself.</div></div>${message}${questions}`;
+    s2 = `<div class="statusline info"><span class="spin" aria-hidden="true"></span><div><b>${build.status === "running" ? "Building the bid pack now." : "The bid is prepared. The bid pack is being built."}</b><br>This usually takes 10 to 30 minutes. This page updates by itself.</div></div>${message}${questions}`;
   } else if (prep && prep.status === "failed") {
-    s2 = `<div class="statusline bad"><div><b>Tender Desk could not prepare this bid.</b><br>${esc(prep.error || "")}</div></div>
+    s2 = `<div class="statusline bad"><div><b>This bid could not be prepared.</b><br>${esc(prep.error || "")}</div></div>
       ${noteBox(prep.note)}<div class="actions"><button class="btn" type="button" id="prepBtn" ${!docsHere.length && !docs.length ? "disabled" : ""} ${!docsHere.length && docs.length ? 'data-fetch="1"' : ""}>Try again</button></div>`;
   } else if (pack || (prep && prep.status === "done")) {
     const when = (prep && prep.status === "done" && prep.finished_at) || (pack && pack.finished_at);
-    s2 = `<div class="statusline ${build && build.status === "failed" ? "bad" : "ok"}"><div><b>Prepared${prep && prep.status === "done" ? " by the Tender Desk" : ""}, ${esc(fmtDate(when, true))}.</b>${build && build.status === "failed" ? `<br>The last bid pack build failed: ${esc(build.error || "")}` : ""}</div></div>
+    s2 = `<div class="statusline ${build && build.status === "failed" ? "bad" : "ok"}"><div><b>Prepared${prep && prep.status === "done" ? " automatically" : ""}, ${esc(fmtDate(when, true))}.</b>${build && build.status === "failed" ? `<br>The last bid pack build failed: ${esc(build.error || "")}` : ""}</div></div>
       ${message}${teamAndScore(pack, prep)}${questions}
-      <details class="more"><summary>Something changed? Tell Tender Desk and prepare again</summary>${noteBox("", "What should Tender Desk change?")}<div class="actions"><button class="btn small" type="button" id="prepBtn">Prepare again</button><span class="muted">Tender Desk starts from the last plan and applies your instructions.</span></div></details>`;
+      <details class="more"><summary>Something changed? Add instructions and prepare again</summary>${noteBox("", "What should change?")}<div class="actions"><button class="btn small" type="button" id="prepBtn">Prepare again</button><span class="muted">Preparation starts from the last plan and applies your instructions.</span></div></details>`;
   } else if (!docsHere.length) {
-    s2 = `<p style="margin:0 0 6px">When the tender documents are on this bid, Tender Desk:</p>${WHAT}
-      ${docs.length ? noteBox("") + `<div class="actions"><button class="btn" type="button" id="prepBtn" data-fetch="1">Get the documents and prepare this bid</button><span class="muted">Tender Desk checks for requests ${PREP_TIMES}. Next check: ${esc(whenText(next))}.</span></div>`
+    s2 = `<p style="margin:0 0 6px">When the tender documents are on this bid, the Tender Desk:</p>${WHAT}
+      ${docs.length ? noteBox("") + `<div class="actions"><button class="btn" type="button" id="prepBtn" data-fetch="1">Get the documents and prepare this bid</button><span class="muted">Requests are picked up ${PREP_TIMES}. Next check: ${esc(whenText(next))}.</span></div>`
         : `<div class="actions"><button class="btn" type="button" disabled>Prepare this bid</button><span class="muted">Upload the tender document in step 1 first.</span></div>`}`;
   } else {
-    s2 = `<p style="margin:0 0 6px">Tender Desk:</p>${WHAT}${noteBox("")}
-      <div class="actions"><button class="btn" type="button" id="prepBtn">Prepare this bid</button><span class="muted">Tender Desk checks for requests ${PREP_TIMES}. Next check: ${esc(whenText(next))}.</span></div>`;
+    s2 = `<p style="margin:0 0 6px">The Tender Desk:</p>${WHAT}${noteBox("")}
+      <div class="actions"><button class="btn" type="button" id="prepBtn">Prepare this bid</button><span class="muted">Requests are picked up ${PREP_TIMES}. Next check: ${esc(whenText(next))}.</span></div>`;
   }
 
   // step 3: uploads
   let s3;
   if (!reqs) {
-    s3 = `<p class="muted" style="margin:0 0 8px">Tender Desk lists exactly what this tender asks for when it prepares the bid. You can check the usual returnables against the library now.</p>
+    s3 = `<p class="muted" style="margin:0 0 8px">Preparation lists exactly what this tender asks for. You can check the usual returnables against the library now.</p>
       <button class="btn ghost small" type="button" id="reqStart">Check the usual returnables now</button>`;
   } else {
     const count = k => reqs.filter(r => r.status === k).length;
     s3 = `<div class="tally"><span class="chip ok">${count("ok") + count("to_generate")} ready</span>${count("missing") ? `<span class="chip bad">${count("missing")} missing</span>` : ""}${count("expired") ? `<span class="chip warn">${count("expired")} out of date</span>` : ""}${count("manual") ? `<span class="chip info">${count("manual")} to attach by hand</span>` : ""}${count("in_document") ? `<span class="chip">${count("in_document")} form${count("in_document") === 1 ? "" : "s"} in the tender document</span>` : ""}</div>
       ${need.length ? `<ul class="needlist">${need.slice(0, 6).map(r => `<li><span class="chip ${r.status === "expired" ? "warn" : "bad"}">${r.status === "expired" ? "Out of date" : "Missing"}</span><span>${esc(r.title)}${r.person && !(r.title || "").includes(r.person) ? ` <span class="muted">· ${esc(r.person)}</span>` : ""}</span></li>`).join("")}${need.length > 6 ? `<li class="muted">and ${need.length - 6} more</li>` : ""}</ul>`
-        : `<p style="margin:8px 0 0">${pack ? "Every document the library can supply is on file." : "Nothing is missing so far. Tender Desk may add items when it reads the tender."}</p>`}
+        : `<p style="margin:8px 0 0">${pack ? "Every document the library can supply is on file." : "Nothing is missing so far. Preparation may add items when it reads the tender."}</p>`}
       <div class="actions"><button class="btn${need.length ? "" : " ghost"}" type="button" id="toUploads">Open the upload list for this bid</button><span class="muted">What each document must show, where to get it, and an upload button for each.</span></div>
       <details class="more"><summary>Everything this bid needs (${reqs.length})</summary><div id="reqBox"></div></details>`;
   }
@@ -620,7 +620,7 @@ function renderSheet() {
   // step 4: print and submit
   let s4;
   if (!pack) {
-    s4 = `<p class="muted" style="margin:0">The bid pack appears here when Tender Desk has prepared the bid: the returnables pack ready to print, the red filling guide with the blank original, the priced BoQ and cost model, the cover page, the index, the envelope labels, the checklist, and every CV and letter on its own.</p>`;
+    s4 = `<p class="muted" style="margin:0">The bid pack appears here once the bid is prepared: the returnables pack ready to print, the red filling guide with the blank original, the priced BoQ and cost model, the cover page, the index, the envelope labels, the checklist, and every CV and letter on its own.</p>`;
   } else {
     const tdIdx = ((pack.summary || {}).index || []).find(e => /tender document/i.test(e.title || ""));
     s4 = `${buildActive ? '<div class="notice info" style="margin:0 0 10px">A new bid pack is being built. The files below are from the last build.</div>' : ""}
@@ -631,12 +631,12 @@ function renderSheet() {
       <ol class="steps">
         <li>Print the returnables pack.</li>
         <li>Print the blank original tender document and complete it in pen, copying the red entries from the filling guide and the rates from column H of the cost model.${tdIdx ? ` Insert it behind divider ${esc(tdIdx.no)} (pages ${esc(tdIdx.pages)}).` : ""}</li>
-        <li>Sign and date every CV, letter and form, and answer the declarations yourself. Tender Desk never signs or answers them.</li>
+        <li>Sign and date every CV, letter and form, and answer the declarations yourself. The Tender Desk never signs or answers them.</li>
         <li>Certify the copies and have any affidavit commissioned.</li>
         <li>Seal the envelope(s), stick on the labels and deliver before ${esc(fmtDate(t.closes_at, true))}.</li>
       </ol>
       <p class="muted" style="margin:6px 0 0">The full checklist is on the <button class="linkbtn" type="button" id="toUploads2">Uploads needed</button> tab.</p>
-      <div class="actions"><button class="btn ghost small" type="button" id="rebuild">Build again with today's documents and rates</button><span class="muted">Use this after uploading missing documents. the Tender Desk's plan stays the same.</span></div>
+      <div class="actions"><button class="btn ghost small" type="button" id="rebuild">Build again with today's documents and rates</button><span class="muted">Use this after uploading missing documents. The preparation plan stays the same.</span></div>
       ${older.length ? `<details class="more"><summary>Earlier bid packs (${older.length} files)</summary><ul class="doclist">${older.map(fileRow).join("")}</ul></details>` : ""}`;
   }
 
@@ -655,10 +655,10 @@ function renderSheet() {
       <div class="fact"><dt>Submission</dt><dd>${t.e_submission ? "Electronic submission" : "Hard copy"}${t.two_envelope ? " · two envelopes" : ""}${t.validity_days ? ` · valid ${esc(t.validity_days)} days` : ""}<br><span class="muted">${esc(t.delivery || "")}</span></dd></div>
     </dl>
 
-    <ol class="flow" aria-label="Steps for this bid">${["Tender documents", "Tender Desk prepares", "Upload what is missing", "Print and submit"].map((l, i) => `<li class="${state[i]}"><span>Step ${i + 1}${state[i] === "done" ? " · done" : state[i] === "now" ? " · now" : ""}</span><b>${esc(l)}</b></li>`).join("")}</ol>
+    <ol class="flow" aria-label="Steps for this bid">${["Tender documents", "Prepare the bid", "Upload what is missing", "Print and submit"].map((l, i) => `<li class="${state[i]}"><span>Step ${i + 1}${state[i] === "done" ? " · done" : state[i] === "now" ? " · now" : ""}</span><b>${esc(l)}</b></li>`).join("")}</ol>
 
     ${step(1, "Tender documents", s1)}
-    ${step(2, "Tender Desk prepares the bid", s2)}
+    ${step(2, "Prepare the bid", s2)}
     ${step(3, "Upload what is missing", s3)}
     ${step(4, "Print, sign and submit", s4)}
 
@@ -667,7 +667,7 @@ function renderSheet() {
         <div class="fact"><dt>Type</dt><dd>${esc(t.tender_type || "–")}${t.is_panel ? " · panel / rate-based" : ""}</dd></div>
         <div class="fact"><dt>Category</dt><dd>${esc(t.category || "–")}</dd></div>
         <div class="fact"><dt>Contact</dt><dd>${esc(t.contact_person || "–")}<br><span class="mono" style="user-select:all">${esc(t.contact_email || "")}</span> <span class="mono">${esc(t.contact_phone || "")}</span></dd></div>
-        <div class="fact"><dt>Why it is on the list</dt><dd>${esc(t.match_reason || "–")}${t.screened_at ? ` <span class="muted">(checked by the Tender Desk ${esc(fmtDate(t.screened_at))})</span>` : ""}</dd></div>
+        <div class="fact"><dt>Why it is on the list</dt><dd>${esc(t.match_reason || "–")}${t.screened_at ? ` <span class="muted">(documents checked ${esc(fmtDate(t.screened_at))})</span>` : ""}</dd></div>
       </dl>
       ${t.conditions ? `<h4 class="sub">Special conditions</h4><div class="pre">${esc(t.conditions)}</div>` : ""}
       ${t.screening_notes ? `<h4 class="sub">Notes from the document check</h4><div class="pre">${esc(t.screening_notes)}</div>` : ""}
@@ -714,9 +714,9 @@ function renderSheet() {
         const saved = await fetchDocs(t);
         if (!saved) throw { message: "No documents could be copied from eTenders. Upload the tender document in step 1, then press Prepare this bid." };
       }
-      b.textContent = "Sending to Tender Desk…";
+      b.textContent = "Sending…";
       const r = await api("request_prepare", { tender_id: t.id, note });
-      toast(r.existing ? "Instructions saved" : `Sent to Tender Desk. Next check ${whenText(nextCheck())}.`);
+      toast(r.existing ? "Instructions saved" : `Sent for preparation. Next check ${whenText(nextCheck())}.`);
       await openTender(t.id, true); refreshRow(st.current || t); loadDashboard();
     } catch (err) { toast(errorCopy(err).replace(/<[^>]+>/g, "")); b.disabled = false; b.textContent = label; if (b.dataset.fetch) openTender(t.id, true); }
   };
@@ -792,14 +792,14 @@ const CAT_GUIDE = {
   appointment_letter: "The client's letter appointing Pump Group to a completed project, showing the client, contract value, scope and dates.",
   completion_certificate: "The practical or final completion certificate for the same project, signed by the client or the engineer.",
   reference_letter: "A reference letter from the client on their letterhead, signed, with a contact name and telephone number.",
-  cv: "The person's own CV, signed and dated. Tender Desk writes a tailored CV for each bid, so this is needed only when the tender asks for the person's original CV too.",
+  cv: "The person's own CV, signed and dated. A tailored CV is written for each bid, so this is needed only when the tender asks for the person's original CV too.",
   qualification: "Certified copies of the person's degree or diploma and professional registration certificates (for example ECSA or SACPCMP), with proof that the registration is current.",
   plant: "A plant list with proof of ownership (invoices or registration papers), or hire agreements or letters of intent from the hire company.",
   health_safety: "The SHE policy signed by the MD, the health and safety plan or baseline risk assessment, and the appointment of the health and safety officer.",
   quality: "The quality policy or quality plan, and the ISO 9001 certificate if held (it counts only for the scope it states).",
   company_profile: "The current company profile (PDF).",
   jv: "The signed joint venture or subcontract agreement, and the partner's own compliance documents (CSD, tax, CIDB, B-BBEE).",
-  personnel_appointment: "A signed Pump Group letter appointing the person to the position. Tender Desk drafts a new one for each bid in the pack, so upload only signed copies you already have.",
+  personnel_appointment: "A signed Pump Group letter appointing the person to the position. A new one is drafted for each bid in the pack, so upload only signed copies you already have.",
   other: "The document exactly as the tender describes it."
 };
 
@@ -874,7 +874,7 @@ async function renderUploads(id) {
   const n = daysLeft(t.closes_at);
   const func = S.functionality || [];
   const fMax = func.reduce((s, f) => s + (Number(f.max_points) || 0), 0), fEst = func.reduce((s, f) => s + (Number(f.est_points) || 0), 0);
-  const PREP = { queued: "Waiting for Tender Desk (next check " + whenText(nextCheck()) + ")", waiting: "On hold: " + ((prep && prep.progress) || ""), running: "Working on it now",
+  const PREP = { queued: "Waiting for preparation (next check " + whenText(nextCheck()) + ")", waiting: "On hold: " + ((prep && prep.progress) || ""), running: "Working on it now",
     done: "Prepared " + fmtDate(prep && prep.finished_at, true), failed: "Could not prepare: " + ((prep && prep.error) || ""), cancelled: "Request cancelled" };
   const prepText = prep ? PREP[prep.status] : pack ? "Prepared " + fmtDate(pack.finished_at, true) : "Not prepared yet";
   const buildText = build && ["queued", "running"].includes(build.status) ? "Being built now" : pack ? "Built " + fmtDate(pack.finished_at, true) : build && build.status === "failed" ? "Build failed" : "Not built yet";
@@ -947,15 +947,15 @@ async function renderUploads(id) {
       <div class="org">${esc(t.organ_of_state || "")}${t.province ? " · " + esc(t.province) : ""}</div>
       <dl class="facts">
         <div class="fact"><dt>Closes</dt><dd><b>${esc(fmtDate(t.closes_at, true))}</b> ${n != null ? `<span class="muted">(${n < 0 ? "closed" : n === 0 ? "today" : n + (n === 1 ? " day" : " days") + " left"})</span>` : ""}</dd></div>
-        <div class="fact"><dt>Tender Desk</dt><dd>${esc(prepText)}</dd></div>
+        <div class="fact"><dt>Preparation</dt><dd>${esc(prepText)}</dd></div>
         <div class="fact"><dt>Bid pack</dt><dd>${esc(buildText)}</dd></div>
-        <div class="fact"><dt>Functionality (estimate)</dt><dd>${fMax ? `<b>${esc(fEst)} of ${esc(fMax)}</b> points` : "After Tender Desk has prepared the bid"}</dd></div>
+        <div class="fact"><dt>Functionality (estimate)</dt><dd>${fMax ? `<b>${esc(fEst)} of ${esc(fMax)}</b> points` : "Once the bid is prepared"}</dd></div>
       </dl>
       <div class="readiness"><div><b>${readyN} of ${counted.length}</b> <span class="muted">items ready${total ? ` · ${total} to upload` : ""}</span></div><div class="meter" aria-hidden="true"><i style="width:${pct}%"></i></div></div>
       <div class="actions no-print"><button class="btn small" type="button" id="upOpen">Open the bid</button><button class="btn ghost small" type="button" id="upPrint">Print this list</button>
         ${pack || build ? `<button class="btn ghost small" type="button" id="upRebuild">Build the pack again with the new documents</button>` : ""}</div>
     </div>
-    ${!prep && !pack ? `<div class="notice info">Tender Desk has not prepared this bid yet, so this list comes from the advert and the usual returnables. Open the bid and press <b>Prepare this bid</b> for the tender's own list.</div>` : ""}
+    ${!prep && !pack ? `<div class="notice info">This bid has not been prepared yet, so this list comes from the advert and the usual returnables. Open the bid and press <b>Prepare this bid</b> for the tender's own list.</div>` : ""}
     ${!total && !manual.length && rows.length ? `<div class="notice info" style="background:var(--ok-bg);color:var(--ok)">Nothing to upload for this bid. ${pack ? "Check the list at the end, then print." : ""}</div>` : ""}
     ${block("Upload these", "Not in the document library, or listed there without its file. Each upload is saved to the library, so the next bid has it too.", missing, "")}
     ${block("Replace these: out of date", "The library has a copy, but it has expired or is older than the tender allows.", expired, "expired")}
@@ -966,8 +966,8 @@ async function renderUploads(id) {
     ${review.length ? `<section class="upsec"><h3>Check before you rely on it <span class="count">${review.length}</span></h3><ul class="plainlist">${review.map(x => `<li>${esc(x)}</li>`).join("")}</ul></section>` : ""}
     <section class="upsec"><h3>At the end, by hand</h3><p class="muted">Tick them off as you go. Ticks are kept on this device.</p>
       ${byHand.map(([h, items]) => `<h4 class="sub">${esc(h)}</h4>${tickList(items)}`).join("")}</section>
-    ${ready.length || na.length ? `<details class="upsec more-box"><summary><b>Ready: on file or prepared by the Tender Desk (${ready.length})</b></summary>
-      <ul class="doclist">${ready.map(r => `<li><span class="nm">${esc(r.title)}${r.person && !(r.title || "").includes(r.person) ? ` <span class="muted">· ${esc(r.person)}</span>` : ""}<br>${(r.docs || []).length ? r.docs.map(fileLink).join(" · ") : `<span class="muted">${r.status === "to_generate" ? "Tender Desk prepares it in the bid pack" : "On file"}</span>`}</span><span class="chip ${(REQ_STATUS[r.status] || [""])[0]}">${esc((REQ_STATUS[r.status] || ["", r.status])[1])}</span></li>`).join("")}
+    ${ready.length || na.length ? `<details class="upsec more-box"><summary><b>Ready: on file or prepared automatically (${ready.length})</b></summary>
+      <ul class="doclist">${ready.map(r => `<li><span class="nm">${esc(r.title)}${r.person && !(r.title || "").includes(r.person) ? ` <span class="muted">· ${esc(r.person)}</span>` : ""}<br>${(r.docs || []).length ? r.docs.map(fileLink).join(" · ") : `<span class="muted">${r.status === "to_generate" ? "Prepared automatically in the bid pack" : "On file"}</span>`}</span><span class="chip ${(REQ_STATUS[r.status] || [""])[0]}">${esc((REQ_STATUS[r.status] || ["", r.status])[1])}</span></li>`).join("")}
         ${na.map(r => `<li><span class="nm">${esc(r.title)} <span class="muted">· marked not needed</span></span><button class="linkbtn" type="button" data-upset="missing" data-id="${esc(r.id)}">Undo</button></li>`).join("")}</ul></details>` : ""}`;
 
   $("#upOpen").onclick = () => openTender(t.id);
@@ -1340,7 +1340,7 @@ async function loadRates() {
 }
 function renderRates() {
   const tb = $("#rateRows");
-  if (!st.rates.length) { tb.innerHTML = `<tr><td colspan="8" class="muted">No rates yet. Add them above, paste a block from Excel, build one from resources, or ask the Tender Desk to load the rates from a BoQ you have already priced.</td></tr>`; return; }
+  if (!st.rates.length) { tb.innerHTML = `<tr><td colspan="8" class="muted">No rates yet. Add them above, paste a block from Excel, build one from resources, or load the rates from a BoQ you have already priced.</td></tr>`; return; }
   const BASIS = { "build-up": ["info", "Build-up"], escalated: ["ok", "Escalated"], "as entered": ["", "Fixed"] };
   tb.innerHTML = st.rates.map(r => { const today = r.current_rate ?? r.rate; const [bc, bl] = BASIS[r.rate_basis] || ["", "Fixed"];
     return `<tr class="clickable" data-rate="${esc(r.id)}"><td class="mono">${esc(r.code || "")}</td><td>${esc(r.description)}</td><td>${esc(r.unit || "")}</td><td class="num"><b>${today == null ? "–" : Number(today).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></td><td><span class="chip ${bc}">${esc(bl)}${r.buildup_code ? " " + esc(r.buildup_code) : r.index_key ? " · " + esc(r.index_key) : ""}</span></td><td>${esc(r.category || "")}</td><td class="muted">${esc(r.source || "")}</td><td><button class="linkbtn" type="button" data-rarch="${esc(r.id)}">Retire</button></td></tr>`; }).join("");
@@ -1465,7 +1465,7 @@ async function loadActivity(append) {
 function renderActivity() {
   const sel = $("#actUser");
   const cur = act.user;
-  sel.innerHTML = `<option value="">Everyone</option>${act.people.map(p => `<option value="${esc(p.user_id)}">${esc(p.full_name || p.email)}</option>`).join("")}<option value="auto">Tender Desk and the bid pack builder</option>`;
+  sel.innerHTML = `<option value="">Everyone</option>${act.people.map(p => `<option value="${esc(p.user_id)}">${esc(p.full_name || p.email)}</option>`).join("")}<option value="auto">Tender Desk (automatic preparation and builder)</option>`;
   sel.value = cur;
   const period = { 1: "today", 7: "in the last 7 days", 30: "in the last 30 days", 90: "in the last 90 days" }[act.days] || `in the last ${act.days} days`;
   $("#actPeople").innerHTML = act.people.map(p => {

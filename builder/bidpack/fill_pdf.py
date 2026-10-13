@@ -160,7 +160,7 @@ def fill_pdf(src: str, dst: str, profile: dict, color=(0.75, 0.0, 0.0)) -> FillR
 
 
 def write_on_pdf(src: str, dst: str, items: list[dict]):
-    """Low-level helper for Tender Desk: items = [{page (1-based), x, y_from_top, text, size}] in PDF points."""
+    """Low-level helper: items = [{page (1-based), x, y_from_top, text, size}] in PDF points."""
     reader = PdfReader(src)
     writer = PdfWriter(clone_from=reader)
     by_page = {}

@@ -1,5 +1,5 @@
 """Documents Pump Group writes for each tender, on the company letterhead:
-method statement (from the Tender Desk's draft for the tender's scope), construction programme
+method statement (from the draft written for the tender's scope), construction programme
 (bar chart), and schedules (key personnel, completed projects, functionality response).
 
 Drafts are written for the user to review. Nothing here claims a fact that is not in

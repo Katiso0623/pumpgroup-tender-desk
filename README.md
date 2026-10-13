@@ -12,13 +12,13 @@ province and municipality, what each bid needs, the document library, key person
   proves who it is with GitHub's OIDC token, so no secrets are stored in this repository. It reads scanned tender
   documents and builds bid packs: a red filling guide for the original tender document, the returnables pack ready to
   print, editable cover and index, priced BoQ and cost model, envelope labels and the submission checklist.
-- **Tender Desk prepares bids from the website:** "Prepare this bid" on a bid queues a request. A scheduled Tender Desk task
+- **Automatic bid preparation:** "Prepare this bid" on a bid queues a request. A scheduled preparation task
   (every hour on weekdays, 06:54 to 17:54 South African time) reads the tender documents, chooses the key personnel,
   writes the plan (returnables in the tender's order, functionality, method statement, programme, contract data) and
   hands it to the builder. Its instructions are in `builder/PREPARER_PROMPT.md`.
 - **Uploads needed:** a tab that lists, for each bid, every document still to upload with what it must show, its date
   limit and an upload button, followed by everything to sign, certify and deliver by hand.
-- **Activity (administrators):** who is active now and what each person did (uploads, status changes, requests to
-  Tender Desk, library, people, costs and team changes, bids opened), filterable and exportable to CSV. Recorded by the
+- **Activity (administrators):** who is active now and what each person did (uploads, status changes, preparation
+  requests, library, people, costs and team changes, bids opened), filterable and exportable to CSV. Recorded by the
   database API and the `site-api` function; passwords are never recorded.
-- **Tender scanning, screening and email alerts** run in Supabase and in scheduled Tender Desk tasks.
+- **Tender scanning, screening and email alerts** run in Supabase and in scheduled tasks.
